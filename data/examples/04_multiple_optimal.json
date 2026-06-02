@@ -1,0 +1,14 @@
+{
+  "name": "Đa nghiệm: Lựa chọn của nhà quản trị",
+  "description": "Trường hợp hiếm hoi khi bài toán tồn tại nhiều hơn một lộ trình vận tải cho cùng mức chi phí thấp nhất. Các ô phi cơ sở có chỉ số Delta bằng 0 chính là dấu hiệu của các phương án dự phòng.",
+  "insight": "Toán học cho ta con số, nhưng con người chọn giải pháp. Nhà quản trị có thể ưu tiên phương án phân tán hàng hóa để giảm rủi ro hỏng hóc, hoặc tập trung hàng hóa vào ít tuyến đường để dễ kiểm soát. Cả hai đều đạt hiệu quả kinh tế tối đa.",
+  "problem_type": "min",
+  "sources": ["Kho Hà Nội", "Kho Đà Nẵng"],
+  "destinations": ["Đại lý 1", "Đại lý 2"],
+  "supply": [100, 100],
+  "demand": [100, 100],
+  "cost": [[5, 5], [5, 5]],
+  "key_highlights": [
+    {"stage": "2. MODI tối ưu hóa", "method": "Góc Tây Bắc (NW)", "step": 2, "label": "Tối ưu nhưng tồn tại Delta=0"}
+  ]
+}

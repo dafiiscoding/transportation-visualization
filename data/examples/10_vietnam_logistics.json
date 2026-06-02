@@ -1,0 +1,21 @@
+{
+  "name": "Logistics VN: Quy mô thử thách thuật toán",
+  "description": "Mô phỏng mạng lưới phân phối từ 5 cụm kho/cảng lớn đến 12 vùng tiêu thụ. Với 60 biến quyết định, việc tìm điểm xuất phát bằng tay bắt đầu trở nên dễ sai sót.",
+  "insight": "Sự chênh lệch giữa các phương pháp xấp xỉ ở quy mô này là rất lớn. Đồng thời, đây là sân diễn để LP Solver (Lập trình tuyến tính) tỏa sáng, nó quét qua hàng vạn đỉnh của đa diện ràng buộc để chốt hạ nghiệm tối ưu toàn cục chỉ trong vài mili-giây.",
+  "problem_type": "min",
+  "sources": ["Cảng Hải Phòng", "Cảng Đà Nẵng", "Cảng Cát Lái", "Kho Bắc Ninh", "Kho Cần Thơ"],
+  "destinations": ["Hà Nội", "Hải Dương", "Vinh", "Huế", "Quy Nhơn", "Nha Trang", "Đà Lạt", "Vũng Tàu", "Long An", "Tiền Giang", "Rạch Giá", "Cà Mau"],
+  "supply": [5000, 3000, 7000, 4000, 2000],
+  "demand": [2500, 1000, 1200, 800, 1500, 1300, 1100, 1400, 2000, 1800, 1200, 2400],
+  "cost": [
+    [2, 1, 5, 8, 12, 15, 18, 20, 22, 24, 28, 30],
+    [10, 8, 4, 2, 6, 8, 12, 14, 18, 20, 25, 28],
+    [25, 22, 18, 15, 10, 6, 4, 2, 5, 8, 12, 15],
+    [1, 2, 4, 10, 15, 18, 22, 24, 26, 28, 32, 35],
+    [30, 28, 25, 22, 18, 14, 10, 6, 4, 2, 2, 5]
+  ],
+  "key_highlights": [
+    {"stage": "1. Tìm điểm xuất phát", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "VAM xử lý ma trận lớn"},
+    {"stage": "3. LP tối ưu", "method": "LP tối ưu", "step": 1, "label": "LP Solver chốt hạ tức thời"}
+  ]
+}

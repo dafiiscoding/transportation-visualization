@@ -1,0 +1,21 @@
+{
+  "name": "LCM: Cái bẫy của sự tham lam",
+  "description": "Ma trận 4x5 được thiết kế như một bãi mìn. Thuật toán Least Cost (LCM) sẽ bị 'dụ' bởi các chi phí cực rẻ (1$, 2$) ở giai đoạn đầu, để rồi cuối cùng bị ép phải đi qua các 'nút thắt cổ chai' với chi phí trừng phạt lên tới hàng nghìn đô.",
+  "insight": "Sự tối ưu cục bộ (chọn cái rẻ nhất ngay trước mắt) thường dẫn đến thảm họa toàn cục. Đây là minh chứng kinh điển cho việc thiếu Tầm nhìn cơ hội (Penalty Analysis) trong ra quyết định chuỗi cung ứng.",
+  "problem_type": "min",
+  "sources": ["Nguồn A", "Nguồn B", "Nguồn C", "Nguồn D"],
+  "destinations": ["Đích 1", "Đích 2", "Đích 3", "Đích 4", "Đích 5"],
+  "supply": [100, 150, 200, 50],
+  "demand": [80, 120, 90, 110, 100],
+  "cost": [
+    [2, 300, 400, 500, 600],
+    [700, 1, 800, 900, 1000],
+    [1100, 1200, 3, 1300, 1400],
+    [1500, 1600, 1700, 1800, 5000]
+  ],
+  "key_highlights": [
+    {"stage": "1. Tìm điểm xuất phát", "method": "Chi phí nhỏ nhất (LCM)", "step": 1, "label": "LCM tham mồi 1$ và 2$"},
+    {"stage": "1. Tìm điểm xuất phát", "method": "Chi phí nhỏ nhất (LCM)", "step": 4, "label": "Gánh hậu quả 5000$"},
+    {"stage": "1. Tìm điểm xuất phát", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "VAM né bẫy nhờ chỉ số Penalty"}
+  ]
+}

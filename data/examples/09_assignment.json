@@ -1,0 +1,15 @@
+{
+  "name": "Phân công (Assignment): Ma trận đặc biệt",
+  "description": "Trường hợp cực hạn của bài toán vận tải, trong đó lượng Cung của mỗi nguồn và lượng Cầu của mỗi đích đều đúng bằng 1. Đây là bài toán giao việc cho nhân sự.",
+  "insight": "Bản chất của thuật toán vận tải đủ mạnh để giải quyết bài toán phân công (vốn thường dùng thuật toán Hungarian). Nó chứng minh tính tổng quát của Lập trình tuyến tính: Bất kể là hàng tấn hàng hóa hay một nhân sự duy nhất, logic tối ưu hóa là không đổi.",
+  "problem_type": "min",
+  "sources": ["Chuyên gia A", "Chuyên gia B", "Chuyên gia C", "Chuyên gia D"],
+  "destinations": ["Dự án 1", "Dự án 2", "Dự án 3", "Dự án 4"],
+  "supply": [1, 1, 1, 1],
+  "demand": [1, 1, 1, 1],
+  "cost": [[9, 2, 7, 8], [6, 4, 3, 7], [5, 8, 1, 8], [7, 6, 9, 4]],
+  "key_highlights": [
+    {"stage": "2. MODI tối ưu hóa", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "MODI giải quyết bài toán 1-1"},
+    {"stage": "3. LP tối ưu", "method": "LP tối ưu", "step": 1, "label": "Đích đến tối ưu tuyệt đối"}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Ràng buộc: Bài toán xử lý đứt gãy tuyến",
+  "description": "Mô phỏng một kịch bản gián đoạn chuỗi cung ứng: Tuyến đường huyết mạch rẻ nhất (Nguồn 1 -> Đích 1) bỗng nhiên bị đứt gãy do thiên tai hoặc cấm vận.",
+  "insight": "Trong tối ưu hóa, ta dùng kỹ thuật 'Big-M' (gán một chi phí vô cùng lớn) để trừng phạt và ép thuật toán né tránh tuyến đường này. Nếu kết quả cuối cùng vẫn phải dùng đến tuyến Big-M, điều đó chứng tỏ hệ thống logistics của bạn đã hết dư địa dự phòng và bài toán rơi vào trạng thái vô nghiệm thực tế.",
+  "problem_type": "min",
+  "sources": ["Nguồn 1", "Nguồn 2", "Nguồn 3"],
+  "destinations": ["Đích 1", "Đích 2", "Đích 3"],
+  "supply": [50, 60, 40],
+  "demand": [70, 50, 30],
+  "cost": [[1, 5, 8], [9, 2, 4], [3, 7, 6]],
+  "forbidden": [[true, false, false], [false, false, false], [false, false, false]],
+  "key_highlights": [
+    {"stage": "1. Tìm điểm xuất phát", "method": "Chi phí nhỏ nhất (LCM)", "step": 1, "label": "Chấp nhận bỏ qua tuyến 1$"},
+    {"stage": "2. MODI tối ưu hóa", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "Tìm đường vòng tối ưu"}
+  ]
+}

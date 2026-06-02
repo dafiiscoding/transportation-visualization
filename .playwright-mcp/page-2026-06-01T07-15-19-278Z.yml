@@ -1,0 +1,73 @@
+- generic [ref=e2]:
+  - generic [ref=e11]:
+    - heading "🚚 Vận tải tối ưu" [level=2] [ref=e16]
+    - separator [ref=e21]
+    - paragraph [ref=e26]:
+      - strong [ref=e27]: 📥 Chế độ nhập liệu
+    - radiogroup "Chế độ nhập liệu" [ref=e30] [cursor=pointer]:
+      - generic [ref=e31]:
+        - radio "Ví dụ có sẵn" [checked]
+        - paragraph [ref=e36]: Ví dụ có sẵn
+      - generic [ref=e37]:
+        - radio "Nhập tay"
+        - paragraph [ref=e42]: Nhập tay
+      - generic [ref=e43]:
+        - radio "Upload CSV"
+        - paragraph [ref=e48]: Upload CSV
+    - paragraph [ref=e53]:
+      - strong [ref=e54]: 🎯 Loại bài toán
+    - radiogroup "Loại bài toán" [ref=e57] [cursor=pointer]:
+      - generic [ref=e58]:
+        - radio "⬇ Tối thiểu hoá chi phí" [checked]
+        - paragraph [ref=e63]: ⬇ Tối thiểu hoá chi phí
+      - generic [ref=e64]:
+        - radio "⬆ Tối đa hoá lợi nhuận"
+        - paragraph [ref=e69]: ⬆ Tối đa hoá lợi nhuận
+    - separator [ref=e74]
+    - paragraph [ref=e79]:
+      - strong [ref=e80]: ⚙️ Thuật toán
+    - generic [ref=e85] [cursor=pointer]:
+      - checkbox "✨ Áp dụng MODI để cải thiện NW/LC/VAM" [checked]
+      - paragraph [ref=e90]: ✨ Áp dụng MODI để cải thiện NW/LC/VAM
+    - separator [ref=e95]
+    - paragraph [ref=e100]:
+      - strong [ref=e101]: 📂 Chọn ví dụ
+    - separator [ref=e108]
+  - generic [ref=e3]:
+    - banner [ref=e121]:
+      - generic [ref=e124]:
+        - button "Deploy" [ref=e126] [cursor=pointer]:
+          - generic [ref=e128]: Deploy
+        - button "Main menu" [ref=e130] [cursor=pointer]:
+          - img [ref=e131]
+    - generic [ref=e135]:
+      - generic [ref=e136]:
+        - tablist [ref=e138]:
+          - tab "📋 Dữ liệu" [selected] [ref=e139] [cursor=pointer]:
+            - paragraph [ref=e141]: 📋 Dữ liệu
+          - tab "📊 Kết quả" [ref=e142] [cursor=pointer]:
+            - paragraph [ref=e144]: 📊 Kết quả
+          - tab "🔍 Từng bước" [ref=e145] [cursor=pointer]:
+            - paragraph [ref=e147]: 🔍 Từng bước
+          - tab "🗺 Visualisation" [ref=e148] [cursor=pointer]:
+            - paragraph [ref=e150]: 🗺 Visualisation
+          - tab "💾 Export" [ref=e151] [cursor=pointer]:
+            - paragraph [ref=e153]: 💾 Export
+          - tab "📖 Hướng dẫn" [ref=e154] [cursor=pointer]:
+            - paragraph [ref=e156]: 📖 Hướng dẫn
+        - tabpanel "📋 Dữ liệu" [ref=e159]:
+          - generic [ref=e160]:
+            - 'heading "📋 Bài toán: Assignment 4x4" [level=3] [ref=e165]':
+              - text: "📋 Bài toán: Assignment 4x4"
+              - generic [ref=e166]:
+                - link "Link to heading":
+                  - /url: "#bai-toan-assignment-4x4"
+                  - img
+            - separator [ref=e187]
+            - group [ref=e190]:
+              - generic "keyboard_arrow_right 📖 Giải thích các thuật toán" [ref=e191] [cursor=pointer]:
+                - generic [ref=e192]:
+                  - generic [ref=e194]: keyboard_arrow_right
+                  - paragraph [ref=e197]: 📖 Giải thích các thuật toán
+      - button "Scroll tabs right" [ref=e198] [cursor=pointer]:
+        - img [ref=e199]

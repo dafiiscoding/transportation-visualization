@@ -1,0 +1,21 @@
+{
+  "name": "NW vs VAM: Sức mạnh của xấp xỉ",
+  "description": "Bài toán quy mô 5x6 được thiết kế với độ dốc chi phí (Cost Gradient) lớn. Góc Tây Bắc sẽ phân bổ mù quáng vào vùng chi phí 'cắt cổ', trong khi VAM nhận diện và né tránh rủi ro ngay từ bước đầu.",
+  "insight": "Khác biệt không nằm ở tốc độ, mà ở 'tầm nhìn'. Northwest có giá trị lịch sử nhưng hoàn toàn vô dụng trong kinh doanh hiện đại. VAM, nhờ khái niệm 'Chi phí cơ hội' (Penalty), đã tạo ra phương án gần chạm mức tối ưu toàn cục chỉ sau một pass.",
+  "problem_type": "min",
+  "sources": ["Kho Bắc", "Kho Trung 1", "Kho Trung 2", "Kho Nam 1", "Kho Nam 2"],
+  "destinations": ["Đại lý A", "Đại lý B", "Đại lý C", "Đại lý D", "Đại lý E", "Đại lý F"],
+  "supply": [300, 250, 400, 350, 500],
+  "demand": [250, 350, 200, 400, 300, 300],
+  "cost": [
+    [50, 55, 60, 65, 70, 75],
+    [40, 45, 50, 55, 60, 65],
+    [30, 35, 40, 45, 50, 55],
+    [20, 25, 30, 35, 40, 45],
+    [10, 15, 20, 25, 30, 35]
+  ],
+  "key_highlights": [
+    {"stage": "1. Tìm điểm xuất phát", "method": "Góc Tây Bắc (NW)", "step": 1, "label": "NW đâm đầu vào vùng giá 50-75$"},
+    {"stage": "1. Tìm điểm xuất phát", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "VAM gom hàng về vùng giá 10-30$"}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Cầu > Cung: Quyết định cắt giảm (Shortage)",
+  "description": "Nhu cầu thị trường (160 đơn vị) vượt quá khả năng đáp ứng của kho (120 đơn vị). Hệ thống sinh ra một 'Nguồn ảo' (Dummy Source) để bù đắp sự thiếu hụt.",
+  "insight": "Nguồn ảo đại diện cho lượng 'hàng không được giao'. Nếu ta gán chi phí phạt (Penalty Cost) vi phạm hợp đồng vào hàng Dummy này, thuật toán sẽ cắt giảm hàng của khách có mức phạt thấp và dồn mọi nguồn lực để đảm bảo đủ hàng cho đối tác VIP có mức phạt cao.",
+  "problem_type": "min",
+  "sources": ["Kho Trung tâm"],
+  "destinations": ["Khách thường (Phạt nhẹ)", "Đối tác VIP (Phạt nặng)"],
+  "supply": [120],
+  "demand": [80, 80],
+  "cost": [[5, 5]],
+  "metadata": {
+    "dummy_costs": [5, 1000]
+  },
+  "key_highlights": [
+    {"stage": "1. Tìm điểm xuất phát", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "VAM bảo vệ đối tác VIP"},
+    {"stage": "3. LP tối ưu", "method": "LP tối ưu", "step": 1, "label": "Kết quả: Khách thường chịu thiệt"}
+  ]
+}

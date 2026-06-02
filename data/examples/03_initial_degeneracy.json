@@ -1,0 +1,15 @@
+{
+  "name": "Suy biến: Nút thắt trong điều phối",
+  "description": "Tình huống cực đoan khi một ô phân bổ làm cạn kiệt cả khả năng cung ứng và nhu cầu nhận hàng cùng lúc. Điều này làm thiếu hụt số lượng các 'tuyến đường cơ sở' cần thiết để tính toán.",
+  "insight": "Khi hệ thống bị thiếu 'bậc tự do', ta phải chỉ định một tuyến đường giả (với lượng hàng bằng 0) để duy trì mạng lưới tính toán. Nếu không có bước 'cứu vãn' này, thuật toán MODI sẽ bị kẹt vì không thể xác định được thế vị cho các nút còn lại.",
+  "problem_type": "min",
+  "sources": ["Nhà máy 1", "Nhà máy 2"],
+  "destinations": ["Kho A", "Kho B"],
+  "supply": [30, 30],
+  "demand": [30, 30],
+  "cost": [[2, 8], [4, 5]],
+  "key_highlights": [
+    {"stage": "1. Tìm điểm xuất phát", "method": "Góc Tây Bắc (NW)", "step": 1, "label": "Điểm thắt nút (30/30)"},
+    {"stage": "2. MODI tối ưu hóa", "method": "Góc Tây Bắc (NW)", "step": 1, "label": "Kích hoạt ô cơ sở giả 0"}
+  ]
+}

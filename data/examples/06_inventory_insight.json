@@ -1,0 +1,18 @@
+{
+  "name": "Cung > Cầu: Lựa chọn vị trí lưu kho",
+  "description": "Năng lực sản xuất (200 đơn vị) vượt quá nhu cầu tiêu thụ hiện tại (160 đơn vị). Hệ thống sẽ sinh ra một 'Đích ảo' (Dummy Destination) để hấp thụ 40 đơn vị thừa này.",
+  "insight": "Cột Dummy không chỉ là thủ thuật toán học để cân bằng ma trận. Nó chính là 'Nhà kho'. Bằng cách gán chi phí lưu kho thực tế cho cột Dummy (Kho A đắt, Kho B rẻ), thuật toán sẽ tự động điều phối để lượng hàng dư thừa nằm lại ở nơi có chi phí lưu kho thấp nhất.",
+  "problem_type": "min",
+  "sources": ["Nhà máy A (Lưu kho đắt)", "Nhà máy B (Lưu kho rẻ)"],
+  "destinations": ["Đại lý 1", "Đại lý 2"],
+  "supply": [100, 100],
+  "demand": [80, 80],
+  "cost": [[10, 15], [12, 10]],
+  "metadata": {
+    "dummy_costs": [10, 2]
+  },
+  "key_highlights": [
+    {"stage": "1. Tìm điểm xuất phát", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "VAM tính luôn phí lưu kho"},
+    {"stage": "3. LP tối ưu", "method": "LP tối ưu", "step": 1, "label": "Kết quả: Hàng thừa ở Nhà máy B"}
+  ]
+}
