@@ -1,0 +1,53 @@
+{
+  "name": "Ví dụ Slide (3x4): Bài toán xuyên suốt",
+  "description": "Bài toán ví dụ được sử dụng xuyên suốt trong slide thuyết trình của nhóm. Dùng để minh họa chi tiết từng bước của các phương pháp khởi tạo và thuật toán thế vị (MODI).",
+  "insight": "Nghiệm tối ưu Z* = 450. Phương pháp Vogel đạt được nghiệm này ngay từ bước đầu tiên (không cần qua vòng lặp MODI nào). Trong khi đó, Góc Tây Bắc (Z=690) cần tới 3 vòng lặp MODI để tối ưu hóa.",
+  "problem_type": "min",
+  "sources": [
+    "Trạm phát A1",
+    "Trạm phát A2",
+    "Trạm phát A3"
+  ],
+  "destinations": [
+    "Điểm thu B1",
+    "Điểm thu B2",
+    "Điểm thu B3",
+    "Điểm thu B4"
+  ],
+  "supply": [
+    50,
+    70,
+    80
+  ],
+  "demand": [
+    60,
+    30,
+    40,
+    70
+  ],
+  "cost": [
+    [2, 4, 5, 1],
+    [3, 6, 4, 8],
+    [1, 2, 5, 3]
+  ],
+  "key_highlights": [
+    {
+      "stage": "1. Tìm điểm xuất phát",
+      "method": "Góc Tây Bắc (NW)",
+      "step": 1,
+      "label": "Góc Tây Bắc ra chi phí 690"
+    },
+    {
+      "stage": "1. Tìm điểm xuất phát",
+      "method": "Xấp xỉ Vogel (VAM)",
+      "step": 1,
+      "label": "Vogel ra ngay tối ưu 450"
+    },
+    {
+      "stage": "2. MODI tối ưu hóa",
+      "method": "Góc Tây Bắc (NW)",
+      "step": 1,
+      "label": "Vòng lặp MODI 1 (giảm 50)"
+    }
+  ]
+}
