@@ -235,8 +235,8 @@ def main() -> None:
                 st.error(f"Lỗi đọc CSV: {e}")
 
     # ── Tabs (always rendered) ────────────────────────────────────────────────
-    tab1, tab2, tab3, tab4, tab5, tab_guide = st.tabs([
-        "📋 Dữ liệu", "📊 Kết quả", "🔍 Từng bước", "🗺 Visualisation", "💾 Export", "📖 Hướng dẫn"
+    tab1, tab2, tab3, tab4, tab_guide = st.tabs([
+        "📋 Dữ liệu", "📊 Kết quả & Network", "🔍 Từng bước giải", "💾 Export", "📖 Hướng dẫn"
     ])
 
     with tab_guide:
@@ -285,7 +285,7 @@ def main() -> None:
             or problem.problem_type == "max"
             or problem.forbidden is not None
         ):
-            with st.expander("Bảng sau khi chuẩn hóa để giải"):
+            with st.expander("Bảng sau khi chuẩn hóa để giải (Dummy / Phạt)"):
                 render_problem_table(transformed_preview)
 
         st.divider()
@@ -316,7 +316,7 @@ def main() -> None:
 
         if not _has_results(results):
             with tab2:
-                st.info("Bấm **▶ Chạy** để tính toán.")
+                st.info("Bấm **▶ Chạy & Giải** để tính toán.")
             return
 
         transformed = results.get("transformed", transform_problem(problem))
@@ -327,45 +327,22 @@ def main() -> None:
 
         with tab2:
             render_result_overview(problem, initial_results, modi_results, lp_result, assignment_result)
+            
+            st.markdown("---")
+            st.subheader("🗺 Sơ đồ mạng lưới vận tải tối ưu (Network Graph)")
+            st.caption("Trực quan hóa cấu trúc phân bổ hàng hóa giữa các điểm Phát và Thu. Đường nối càng đậm, lượng phân bổ càng lớn.")
+            
+            # Draw network for LP result (or best result)
+            best_r = lp_result if lp_result else list(_result_choices(results).values())[0] if _result_choices(results) else None
+            if best_r:
+                show_labels = st.checkbox("Hiển thị nhãn trên đường nối (tắt đi nếu mạng lưới quá phức tạp)", value=(transformed.m + transformed.n < 15))
+                fig_net = plot_network(transformed, best_r, show_labels=show_labels, figsize=(14, 8))
+                st.pyplot(fig_net, use_container_width=True)
 
         with tab3:
             render_step_panel(transformed, initial_results, modi_results, lp_result, assignment_result)
 
         with tab4:
-            st.subheader("🗺 Trực quan hóa kết quả")
-            
-            choices = _result_choices(results)
-            if choices:
-                result_label = st.selectbox("Chọn kết quả để quan sát", list(choices.keys()), key="viz_result")
-                r_sel = choices[result_label]
-                
-                col_l, col_r = st.columns([1, 1])
-                with col_l:
-                    st.markdown("**Heatmap chi phí:**")
-                    fig_cost = plot_cost_heatmap(transformed)
-                    st.pyplot(fig_cost, use_container_width=True)
-                with col_r:
-                    st.markdown("**Heatmap phân bổ:**")
-                    fig_alloc = plot_allocation_heatmap(transformed, r_sel.allocation)
-                    st.pyplot(fig_alloc, use_container_width=True)
-
-                st.markdown("---")
-                col_b1, col_b2 = st.columns([1, 2])
-                with col_b1:
-                    st.markdown("**Bảng chi phí - phân bổ:**")
-                    st.dataframe(
-                        build_transportation_tableau(transformed, r_sel.allocation),
-                        use_container_width=True,
-                    )
-                with col_b2:
-                    st.markdown("**Sơ đồ mạng lưới vận tải (Network):**")
-                    show_labels = st.checkbox("Hiển thị chi phí trên đường nối", value=(transformed.m + transformed.n < 15))
-                    fig_net = plot_network(transformed, r_sel, show_labels=show_labels)
-                    st.pyplot(fig_net, use_container_width=True)
-            else:
-                st.info("Chưa có kết quả để trực quan hóa.")
-
-        with tab5:
             st.subheader("💾 Export kết quả")
             choices = _result_choices(results)
             if choices:
@@ -392,7 +369,7 @@ def main() -> None:
                 st.info("Chưa có kết quả để export.")
     else:
         with tab2:
-            st.info("👈 Bấm **▶ Chạy** trong sidebar để bắt đầu tính toán.")
+            st.info("👈 Bấm **▶ Chạy & Giải** trong thanh bên trái để bắt đầu tính toán.")
 
 
 if __name__ == "__main__":

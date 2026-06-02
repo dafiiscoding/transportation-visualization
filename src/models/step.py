@@ -12,6 +12,8 @@ class AlgorithmStep:
     remaining_demand: np.ndarray
     selected_cell: tuple[int, int] | None = None
     penalty_table: dict | None = None
+    row_penalties: dict | None = None
+    col_penalties: dict | None = None
     potentials: dict | None = None
     deltas: np.ndarray | None = None
     cycle: list[tuple[int, int, str]] | None = None

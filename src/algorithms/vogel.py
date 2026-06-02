@@ -113,6 +113,8 @@ def vogel(problem: TransportationProblem) -> AlgorithmResult:
             remaining_demand=demand.copy(),
             selected_cell=(i, j),
             penalty_table=penalty_table,
+            row_penalties=row_penalties,
+            col_penalties=col_penalties,
             cost=total_cost(allocation, cost),
         ))
 

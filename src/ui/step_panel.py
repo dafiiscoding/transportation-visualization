@@ -188,6 +188,21 @@ def _render_step_sequence(
         st.dataframe(tableau.style.map(style_tableau), width="stretch")
         st.caption("Ký hiệu: `[Chi phí]` | `Phân bổ` | `Δ: Cơ hội tối ưu` | `(±) Chu trình` | `⬅ Ô đang xét` ")
 
+        if step.row_penalties is not None and step.col_penalties is not None:
+            st.markdown("---")
+            st.markdown("#### 🎯 Bảng phân tích Penalty (Chi phí cơ hội)")
+            st.caption("Penalty = Hiệu số giữa 2 chi phí nhỏ nhất trong cùng một hàng hoặc cột. Thuật toán chọn hàng/cột có Penalty lớn nhất để ưu tiên phân bổ trước, nhằm tránh bị ép vào các ô có chi phí 'cắt cổ'.")
+            c1, c2 = st.columns(2)
+            with c1:
+                r_df = pd.DataFrame(step.row_penalties.items(), columns=["Nguồn", "Penalty Hàng"])
+                # Highlight the max penalty
+                max_r = r_df["Penalty Hàng"].max() if not r_df.empty else 0
+                st.dataframe(r_df.style.apply(lambda s: ['background-color: #fef08a; font-weight:bold' if v == max_r and v > 0 else '' for v in s], subset=['Penalty Hàng']), hide_index=True)
+            with c2:
+                c_df = pd.DataFrame(step.col_penalties.items(), columns=["Đích", "Penalty Cột"])
+                max_c = c_df["Penalty Cột"].max() if not c_df.empty else 0
+                st.dataframe(c_df.style.apply(lambda s: ['background-color: #fef08a; font-weight:bold' if v == max_c and v > 0 else '' for v in s], subset=['Penalty Cột']), hide_index=True)
+
     with right_col:
         fig = plot_allocation_heatmap(problem, step.allocation, step)
         st.pyplot(fig, width="stretch")

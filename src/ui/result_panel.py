@@ -21,6 +21,25 @@ def render_result_overview(
     assignment_result: AlgorithmResult | None = None,
 ) -> None:
     st.subheader("📊 Tổng hợp kết quả")
+    
+    if problem.problem_type == "max":
+        st.info("💡 **Ghi chú bài toán MAX (Tối đa lợi nhuận):** Các thuật toán giải (NW, LCM, VAM, MODI) bản chất là đi tìm cực tiểu (MIN). Do đó, hệ thống đã ngầm chuyển đổi ma trận lợi nhuận thành ma trận chi phí bằng cách: `C_new = M - C_old` (với M là giá trị lớn nhất trong ma trận). Thuật toán giải trên `C_new` để tìm cực tiểu, kết quả cuối cùng tự động được tính ngược lại thành cực đại lợi nhuận cho bạn.")
+
+    # Check for multiple optimal solutions
+    has_multiple_optimals = False
+    if lp_result and lp_result.steps and lp_result.steps[-1].deltas is not None:
+        final_deltas = lp_result.steps[-1].deltas
+        final_alloc = lp_result.allocation
+        m, n = problem.m, problem.n
+        for i in range(m):
+            for j in range(n):
+                if final_alloc[i, j] <= 1e-6 and abs(final_deltas[i, j]) < 1e-6 and not problem.forbidden[i,j] if problem.forbidden is not None else True:
+                    has_multiple_optimals = True
+                    break
+            if has_multiple_optimals: break
+            
+    if has_multiple_optimals:
+        st.warning("⚠️ **Phát hiện đa nghiệm tối ưu:** Tồn tại ô ngoài cơ sở có giá trị Delta = 0. Điều này có nghĩa là bài toán có nhiều hơn 1 phương án phân bổ đạt cùng một mức chi phí/lợi nhuận tối ưu. Các thuật toán có thể chọn các đường đi khác nhau nhưng kết quả hàm mục tiêu cuối cùng vẫn bằng nhau.")
 
     if assignment_result is not None:
         value = objective_value(problem, assignment_result)
