@@ -195,11 +195,26 @@ def _result_choices(results: dict) -> dict[str, AlgorithmResult]:
 
 
 def main() -> None:
+    st.set_page_config(
+        page_title="Transportation Algorithm Visualizer",
+        page_icon="🚚",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+
+    # --- Onboarding First Load ---
+    if "first_visit" not in st.session_state:
+        st.toast("👋 Chào mừng bạn đến với Transportation Visualizer! Nhấn 'Chạy & Giải' để bắt đầu.", icon="🎉")
+        st.session_state["first_visit"] = False
+
+    st.title("🚚 Transportation Algorithm Visualizer")
+    st.markdown("Giải quyết và trực quan hóa bài toán vận tải bằng các thuật toán quy hoạch tuyến tính.")
+
     cfg = render_sidebar()
 
     if cfg["reset"]:
         for key in list(st.session_state.keys()):
-            if key not in ("input_mode", "problem_type", "initial_methods"):
+            if key not in ("input_mode", "problem_type", "initial_methods", "first_visit"):
                 del st.session_state[key]
         st.rerun()
 
@@ -296,9 +311,14 @@ def main() -> None:
             st.info(modi_explanation())
             st.info(lp_explanation())
 
+    # Handle run trigger from tabs
+    run_clicked = cfg["run"] or st.session_state.get("run_triggered_from_tab", False)
+    if run_clicked:
+        st.session_state["run_triggered_from_tab"] = False
+
     # Run when button pressed
-    if cfg["run"] or "results" in st.session_state:
-        if cfg["run"]:
+    if run_clicked or "results" in st.session_state:
+        if run_clicked:
             with st.spinner("⏳ Đang tính toán..."):
                 results = run_algorithms(
                     problem,
@@ -316,7 +336,15 @@ def main() -> None:
 
         if not _has_results(results):
             with tab2:
-                st.info("Bấm **▶ Chạy & Giải** để tính toán.")
+                st.info("Dữ liệu đã sẵn sàng. Hãy bấm nút **Chạy & Giải** để bắt đầu.")
+                if st.button("🚀 Chạy & Giải ngay", type="primary", key="run_tab2"):
+                    st.session_state["run_triggered_from_tab"] = True
+                    st.rerun()
+            with tab3:
+                st.info("Vui lòng chạy thuật toán để xem chi tiết từng bước giải.")
+                if st.button("🚀 Chạy & Giải ngay", type="primary", key="run_tab3"):
+                    st.session_state["run_triggered_from_tab"] = True
+                    st.rerun()
             return
 
         transformed = results.get("transformed", transform_problem(problem))
@@ -330,12 +358,17 @@ def main() -> None:
             
             st.markdown("---")
             st.subheader("🗺 Sơ đồ mạng lưới vận tải tối ưu (Network Graph)")
-            st.caption("Trực quan hóa cấu trúc phân bổ hàng hóa giữa các điểm Phát và Thu. Đường nối càng đậm, lượng phân bổ càng lớn.")
             
             # Draw network for LP result (or best result)
             best_r = lp_result if lp_result else list(_result_choices(results).values())[0] if _result_choices(results) else None
             if best_r:
-                show_labels = st.checkbox("Hiển thị nhãn trên đường nối (tắt đi nếu mạng lưới quá phức tạp)", value=(transformed.m + transformed.n < 15))
+                is_large = transformed.m + transformed.n >= 12
+                if is_large:
+                    st.info("🌟 **Góc nhìn vĩ mô (Macro View):** Với mạng lưới phức tạp (nhiều điểm cung/cầu), biểu đồ sẽ tự động ẩn các con số chi phí để tập trung hiển thị **luồng phân phối chính** (các đường nối đậm). Đây chính là cách LP Solver bao quát toàn cục hệ thống thay vì sa đà vào tính toán cục bộ.")
+                else:
+                    st.caption("Trực quan hóa cấu trúc phân bổ hàng hóa giữa các điểm Phát và Thu. Đường nối càng đậm, lượng phân bổ càng lớn.")
+
+                show_labels = st.checkbox("Hiển thị nhãn chi phí trên đường nối", value=not is_large)
                 fig_net = plot_network(transformed, best_r, show_labels=show_labels, figsize=(14, 8))
                 st.pyplot(fig_net, use_container_width=True)
 
