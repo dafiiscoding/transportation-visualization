@@ -1,0 +1,55 @@
+{
+  "name": "Suy biến đa tầng (Complex Degeneracy)",
+  "description": "Suy biến xảy ra khi phân bổ rơi vào số 0 trước khi duyệt hết hàng/cột (khi một tập con Cung bằng đúng một tập con Cầu). Ví dụ 5x5 này được thiết kế để xảy ra suy biến liên tiếp tại nhiều điểm.",
+  "insight": "Trong bài toán này: (Trạm 1 + Trạm 2) = Cầu 1. (Trạm 3 + Trạm 4) = (Cầu 2 + Cầu 3). Trạm 5 = (Cầu 4 + Cầu 5). Việc khớp hoàn hảo các tổng cục bộ này khiến số lượng ô cơ sở thực tế < m+n-1. Thuật toán (đặc biệt là NW) sẽ liên tục phải chèn các ô '0 giả' (epsilon) để duy trì cấu trúc đồ thị cây khung. Nếu không có cơ chế xử lý suy biến tốt, phần mềm sẽ bị crash hoặc lặp vô tận.",
+  "problem_type": "min",
+  "sources": [
+    "Trạm phát S1",
+    "Trạm phát S2",
+    "Trạm phát S3",
+    "Trạm phát S4",
+    "Trạm phát S5"
+  ],
+  "destinations": [
+    "Điểm thu D1",
+    "Điểm thu D2",
+    "Điểm thu D3",
+    "Điểm thu D4",
+    "Điểm thu D5"
+  ],
+  "supply": [
+    40,
+    60,
+    50,
+    70,
+    80
+  ],
+  "demand": [
+    100,
+    50,
+    70,
+    30,
+    50
+  ],
+  "cost": [
+    [5, 8, 12, 15, 20],
+    [4, 9, 14, 18, 22],
+    [15, 10, 6, 8, 12],
+    [18, 12, 5, 7, 10],
+    [25, 20, 15, 4, 3]
+  ],
+  "key_highlights": [
+    {
+      "stage": "1. Tìm điểm xuất phát",
+      "method": "Góc Tây Bắc (NW)",
+      "step": 2,
+      "label": "Gặp suy biến lần 1 (S1+S2=D1)"
+    },
+    {
+      "stage": "1. Tìm điểm xuất phát",
+      "method": "Góc Tây Bắc (NW)",
+      "step": 4,
+      "label": "Gặp suy biến lần 2"
+    }
+  ]
+}

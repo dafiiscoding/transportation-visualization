@@ -1,0 +1,49 @@
+{
+  "name": "Mặt phẳng Đa nghiệm (Hyperplane of Optimals)",
+  "description": "Bài toán 5x5 được thiết kế với một khối ma trận con 3x3 có chi phí đồng nhất (chi phí = 5) và một khối 2x2 có chi phí thấp (chi phí = 10). Các khu vực khác có chi phí rất cao để ép thuật toán phải phân bổ vào hai khối này.",
+  "insight": "Khi quan sát bảng MODI ở bước cuối cùng, bạn sẽ thấy CẢ MỘT VÙNG LỚN các ô trống có Delta = 0. Về mặt hình học không gian (Quy hoạch tuyến tính), tập hợp các nghiệm tối ưu không chỉ là 1 điểm, hay 1 đoạn thẳng (cạnh), mà nó tạo thành CẢ MỘT MẶT PHẲNG ĐA CHIỀU (Hyperplane). Bạn có thể xoay vòng phân bổ giữa 9 ô góc trên cùng bên trái theo hàng nghìn cách khác nhau mà tổng chi phí vẫn không đổi (Z* = 3500).",
+  "problem_type": "min",
+  "sources": [
+    "Nhà máy 1",
+    "Nhà máy 2",
+    "Nhà máy 3",
+    "Nhà máy 4",
+    "Nhà máy 5"
+  ],
+  "destinations": [
+    "Thành phố 1",
+    "Thành phố 2",
+    "Thành phố 3",
+    "Thành phố 4",
+    "Thành phố 5"
+  ],
+  "supply": [
+    100,
+    100,
+    100,
+    100,
+    100
+  ],
+  "demand": [
+    100,
+    100,
+    100,
+    100,
+    100
+  ],
+  "cost": [
+    [5, 5, 5, 20, 30],
+    [5, 5, 5, 20, 30],
+    [5, 5, 5, 20, 30],
+    [30, 30, 30, 10, 10],
+    [30, 30, 30, 10, 10]
+  ],
+  "key_highlights": [
+    {
+      "stage": "3. LP tối ưu",
+      "method": "LP tối ưu",
+      "step": 1,
+      "label": "Quan sát mảng Delta = 0 khổng lồ"
+    }
+  ]
+}
