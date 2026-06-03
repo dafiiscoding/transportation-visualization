@@ -26,20 +26,22 @@ def render_result_overview(
         st.info("💡 **Ghi chú bài toán MAX (Tối đa lợi nhuận):** Các thuật toán giải (NW, LCM, VAM, MODI) bản chất là đi tìm cực tiểu (MIN). Do đó, hệ thống đã ngầm chuyển đổi ma trận lợi nhuận thành ma trận chi phí bằng cách: `C_new = M - C_old` (với M là giá trị lớn nhất trong ma trận). Thuật toán giải trên `C_new` để tìm cực tiểu, kết quả cuối cùng tự động được tính ngược lại thành cực đại lợi nhuận cho bạn.")
 
     # Check for multiple optimal solutions
-    has_multiple_optimals = False
+    alt_cells = []
     if lp_result and lp_result.steps and lp_result.steps[-1].deltas is not None:
         final_deltas = lp_result.steps[-1].deltas
         final_alloc = lp_result.allocation
         m, n = problem.m, problem.n
         for i in range(m):
             for j in range(n):
-                if final_alloc[i, j] <= 1e-6 and abs(final_deltas[i, j]) < 1e-6 and not problem.forbidden[i,j] if problem.forbidden is not None else True:
-                    has_multiple_optimals = True
-                    break
-            if has_multiple_optimals: break
+                if final_alloc[i, j] <= 1e-6 and abs(final_deltas[i, j]) < 1e-6:
+                    if problem.forbidden is None or not problem.forbidden[i,j]:
+                        alt_cells.append((problem.sources[i], problem.destinations[j]))
             
-    if has_multiple_optimals:
-        st.warning("⚠️ **Phát hiện đa nghiệm tối ưu:** Tồn tại ô ngoài cơ sở có giá trị Delta = 0. Điều này có nghĩa là bài toán có nhiều hơn 1 phương án phân bổ đạt cùng một mức chi phí/lợi nhuận tối ưu. Các thuật toán có thể chọn các đường đi khác nhau nhưng kết quả hàm mục tiêu cuối cùng vẫn bằng nhau.")
+    if alt_cells:
+        st.warning("⚠️ **Phát hiện đa nghiệm tối ưu (Multiple Optimal Solutions)**")
+        st.markdown(f"Hệ thống phát hiện **{len(alt_cells)} tuyến đường** hiện đang trống (không được phân bổ) nhưng có chi phí cơ hội (Delta) bằng 0:")
+        alt_routes_str = ", ".join([f"**{s} → {d}**" for s, d in alt_cells])
+        st.info(f"📍 **Các tuyến:** {alt_routes_str}\n\n👉 **Ý nghĩa thực tế:** Người điều phối có thể tùy ý điều hướng một phần hàng hóa vào các tuyến này (tạo thành các chu trình mới) để tạo ra các phương án phân bổ khác nhau mà **không làm thay đổi tổng chi phí tối ưu**. Điều này cung cấp sự linh hoạt cực lớn khi gặp sự cố đứt gãy chuỗi cung ứng. Tập hợp các phương án này tạo thành một mặt phẳng đa chiều (Hyperplane) trong không gian nghiệm.")
 
     if assignment_result is not None:
         value = objective_value(problem, assignment_result)
@@ -66,11 +68,21 @@ def render_result_overview(
         initial_steps = len(initial.steps)
         modi_steps = len(final_result.steps) - initial_steps
         final_value = objective_value(problem, final_result)
+        
+        path_values = []
+        if initial is not None:
+            initial_value = objective_value(problem, initial)
+            path_values.append(initial_value)
+        if modi is not None:
+            modi_steps_list = final_result.steps[initial_steps:]
+            path_values.extend(allocation_objective_value(problem, step.allocation) for step in modi_steps_list if step.cost is not None)
+            
         summary_rows.append({
             "Phương pháp": name,
             "Bước gốc": initial_steps,
             "Vòng MODI": max(modi_steps, 0),
             "Tổng bước": len(final_result.steps),
+            "Đường đi": " → ".join(f"{v:,.0f}" for v in path_values) if len(path_values) > 1 else "—",
             label: f"{final_value:,.0f}",
             "Cách mốc tối ưu": gap_to_optimum_text(problem, final_value, lp_value),
         })
@@ -125,49 +137,6 @@ def render_result_overview(
             hide_index=True
         )
         st.caption("💡 Hàng tô màu xanh là phương án có kết quả tốt nhất hiện tại.")
-
-    if initial_results:
-        st.markdown("### Giai đoạn 1: Tìm điểm xuất phát")
-        rows = []
-        for name, result in initial_results.items():
-            value = objective_value(problem, result)
-            modi = modi_results.get(name)
-            total_steps = len(modi.steps) if modi is not None else len(result.steps)
-            rows.append({
-                "Phương pháp": name,
-                "Bước gốc": len(result.steps),
-                "Vòng MODI": len(modi.steps) - len(result.steps) if modi is not None else 0,
-                "Tổng bước": total_steps,
-                label: f"{value:,.0f}",
-                "Cách mốc tối ưu": gap_to_optimum_text(problem, value, lp_value),
-            })
-        st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
-
-    if modi_results:
-        st.markdown("### Giai đoạn 2: MODI tối ưu hóa")
-        rows = []
-        for name, result in modi_results.items():
-            value = objective_value(problem, result)
-            initial = initial_results.get(name)
-            initial_value = objective_value(problem, initial) if initial is not None else None
-            initial_step_count = len(initial.steps) if initial is not None else 0
-            modi_steps = result.steps[initial_step_count:]
-            path_values = []
-            if initial is not None:
-                path_values.append(initial_value)
-            path_values.extend(allocation_objective_value(problem, step.allocation) for step in modi_steps if step.cost is not None)
-            rows.append({
-                "Bắt đầu từ": name,
-                "Bước gốc": initial_step_count,
-                "Vòng MODI": len(modi_steps),
-                "Tổng bước": len(result.steps),
-                f"{label} sau MODI": f"{value:,.0f}",
-                "Cải thiện": improvement_text(problem, initial_value, value) if initial_value is not None else "—",
-                "Đường đi": " → ".join(f"{v:,.0f}" for v in path_values) if path_values else "—",
-                "Cách mốc tối ưu": gap_to_optimum_text(problem, value, lp_value),
-                "Kết luận": "Đạt mốc tối ưu" if result.is_optimal else "Cần kiểm tra thêm",
-            })
-        st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
     st.divider()
     fig = plot_phase_comparison(problem, initial_results, modi_results, lp_result)
