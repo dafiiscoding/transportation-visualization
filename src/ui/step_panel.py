@@ -11,6 +11,36 @@ from src.visualization.heatmap import (
 )
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Dựng các "hành trình" liền mạch: mỗi thuật toán = 1 chuỗi bước duy nhất chạy
+# xuyên suốt Khởi tạo → MODI → Tối ưu (modi_results[m].steps đã nối sẵn 2 phần).
+# ──────────────────────────────────────────────────────────────────────────────
+def _build_journeys(
+    initial_results: dict[str, AlgorithmResult],
+    modi_results: dict[str, AlgorithmResult],
+    lp_result: AlgorithmResult | None,
+) -> dict[str, dict]:
+    journeys: dict[str, dict] = {}
+    for method, initial in initial_results.items():
+        if method in modi_results:
+            seq = modi_results[method].steps
+            boundary = len(initial.steps)
+            label = f"{method} → MODI"
+        else:
+            seq = initial.steps
+            boundary = len(seq)
+            label = method
+        journeys[label] = {
+            "seq": seq, "boundary": boundary, "kind": "method", "method": method,
+        }
+    if lp_result is not None:
+        journeys["⚡ LP tối ưu"] = {
+            "seq": lp_result.steps, "boundary": len(lp_result.steps),
+            "kind": "lp", "method": None, "result": lp_result,
+        }
+    return journeys
+
+
 def render_step_panel(
     problem: TransportationProblem,
     initial_results: dict[str, AlgorithmResult],
@@ -18,167 +48,203 @@ def render_step_panel(
     lp_result: AlgorithmResult | None = None,
     assignment_result: AlgorithmResult | None = None,
 ) -> None:
-    st.subheader("🔍 Từng bước theo giai đoạn")
+    st.subheader("🔍 Hành trình từng bước")
 
-    # --- Strategic Highlights Section ---
+    modi_results = modi_results or {}
+
+    # Bài toán phân công: 1 chuỗi Hungarian liền mạch (không có hành trình/giai đoạn).
+    if assignment_result is not None:
+        _render_journey(
+            problem, assignment_result.steps, len(assignment_result.steps),
+            label="assignment", kind="assignment", method_label="Phân công (Hungarian)",
+        )
+        return
+
+    journeys = _build_journeys(initial_results, modi_results, lp_result)
+    if not journeys:
+        st.info("Chưa có kết quả.")
+        return
+
+    labels = list(journeys.keys())
+
+    # --- Nút "Tình huống then chốt": nhảy thẳng tới đúng hành trình + đúng bước ---
     if problem.key_highlights:
         st.info("💡 **Tình huống then chốt:** Nhảy nhanh đến các bước quan trọng để phân tích.")
         cols = st.columns(len(problem.key_highlights))
         for i, highlight in enumerate(problem.key_highlights):
             if cols[i].button(f"📌 {highlight['label']}", key=f"jump_{i}", use_container_width=True):
-                # Set stage
-                st.session_state["step_stage"] = highlight["stage"]
-                # Set method
-                if "Tìm điểm xuất phát" in highlight["stage"]:
-                    st.session_state["step_initial_method"] = highlight["method"]
-                    st.session_state[f"step_idx_initial_{highlight['method']}"] = highlight["step"]
-                elif "MODI" in highlight["stage"]:
-                    st.session_state["step_modi_method"] = highlight["method"]
-                    st.session_state[f"step_idx_modi_{highlight['method']}"] = highlight["step"]
-                elif "LP" in highlight["stage"]:
-                    st.session_state["step_idx_lp_steps"] = highlight["step"]
+                _apply_highlight_jump(highlight, journeys, initial_results)
                 st.rerun()
 
-    modi_results = modi_results or {}
+    # --- Bộ chọn hành trình (1 lớp, thay cho radio giai đoạn + selectbox phương pháp) ---
+    if st.session_state.get("journey") not in labels:
+        st.session_state["journey"] = labels[0]
+    journey_label = st.radio("Hành trình", labels, horizontal=True, key="journey")
+    J = journeys[journey_label]
 
-    if assignment_result is not None:
-        _render_step_sequence(
-            problem,
-            assignment_result,
-            assignment_result.steps,
-            state_key="assignment_steps",
-            heading="Bài toán phân công - nghiệm tối ưu Hungarian",
-        )
+    if J["kind"] == "lp":
+        _render_lp_header(problem, J["result"])
+
+    _render_journey(
+        problem, J["seq"], J["boundary"], journey_label,
+        kind=J["kind"], method_label=J["method"],
+    )
+
+
+def _apply_highlight_jump(highlight: dict, journeys: dict[str, dict], initial_results: dict) -> None:
+    """Quy nút then chốt (stage, method, step) → hành trình + chỉ số bước toàn cục."""
+    stage = highlight.get("stage", "")
+    method = highlight.get("method")
+    step = int(highlight.get("step", 1))
+
+    if "LP" in stage:
+        label = "⚡ LP tối ưu"
+        gidx = step
+    else:
+        label = f"{method} → MODI" if f"{method} → MODI" in journeys else method
+        if label not in journeys:
+            return
+        if "MODI" in stage:
+            boundary = len(initial_results[method].steps) if method in initial_results else 0
+            gidx = boundary + step
+        else:
+            gidx = step
+
+    if label not in journeys:
+        return
+    seq_len = len(journeys[label]["seq"])
+    st.session_state["journey"] = label
+    st.session_state[f"step_idx_journey_{label}"] = max(1, min(gidx, seq_len))
+
+
+def _render_lp_header(problem: TransportationProblem, lp_result: AlgorithmResult) -> None:
+    st.markdown("#### ⚙️ Cơ chế LP (HiGHS) — đầu vào & đầu ra")
+    ci = st.columns(4)
+    ci[0].metric("Số biến (xᵢⱼ)", f"{problem.m * problem.n}")
+    ci[1].metric("Số ràng buộc", f"{problem.m + problem.n}")
+    ci[2].metric("Solver", "HiGHS (SciPy)")
+    ci[3].metric("Trạng thái", "Tối ưu" if lp_result.is_optimal else "—")
+    st.markdown("**📥 Đầu vào gửi cho solver:** ma trận chi phí $C$ (m×n), vector cung $a$, vector cầu $b$ — đóng gói thành bài LP chuẩn:")
+    st.latex(r"\min \sum_{i,j} c_{ij}x_{ij}\quad\text{với}\quad \sum_j x_{ij}=a_i,\ \ \sum_i x_{ij}=b_j,\ \ x_{ij}\ge 0")
+    st.markdown(f"**📤 Đầu ra solver trả về:** trạng thái = *optimal*, tổng chi phí $Z^* = {lp_result.total_cost:,.0f}$, và ma trận phân bổ $x^*$ (bảng bên dưới).")
+    st.caption("Khác MODI: HiGHS nạp toàn bộ bài toán một lần và trả thẳng nghiệm tối ưu — không đi từng vòng, nên chỉ có 1 'bước'.")
+    st.markdown("---")
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Điều hướng + dải giai đoạn + vẽ 1 bước
+# ──────────────────────────────────────────────────────────────────────────────
+def _step_navigator(visible_steps: int, state_key: str) -> int:
+    """Slider + nút ◀▶ cho 1 hành trình; trả về số bước đang xem (1-based)."""
+    if visible_steps == 1:
+        st.caption("Bước 1/1")
+        return 1
+
+    slider_key = f"step_idx_{state_key}"
+    slider_kwargs = {"key": slider_key}
+    if slider_key in st.session_state:
+        clamped = max(1, min(int(st.session_state[slider_key]), visible_steps))
+        if int(st.session_state[slider_key]) != clamped:
+            st.session_state[slider_key] = clamped
+    else:
+        slider_kwargs["value"] = 1
+
+    col_prev, col_slider, col_next = st.columns([1, 8, 1])
+    with col_slider:
+        step_num = st.slider("Bước", 1, visible_steps, **slider_kwargs)
+    with col_prev:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("◀", key=f"prev_{state_key}", disabled=(step_num <= 1)):
+            st.session_state[slider_key] = step_num - 1
+            st.rerun()
+    with col_next:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("▶", key=f"next_{state_key}", disabled=(step_num >= visible_steps)):
+            st.session_state[slider_key] = step_num + 1
+            st.rerun()
+    return step_num
+
+
+def _render_phase_strip(idx: int, boundary: int, seq_len: int) -> str | None:
+    """Dải tiến trình giai đoạn; in-đậm giai đoạn hiện tại. Trả về nhãn để gắn badge."""
+    if boundary >= seq_len:
+        return None  # hành trình 1 giai đoạn (không có MODI) → không cần dải
+    in_init = idx < boundary
+    p1 = f"① Khởi tạo (b1–b{boundary})"
+    p2 = f"② MODI (b{boundary + 1}–b{seq_len})"
+    p1 = f"**{p1}**" if in_init else p1
+    p2 = p2 if in_init else f"**{p2}**"
+    st.markdown(f"🧭 Giai đoạn: {p1} &nbsp;·&nbsp; {p2}")
+    return "① Khởi tạo" if in_init else "② MODI"
+
+
+def _render_journey(
+    problem: TransportationProblem,
+    seq: list[AlgorithmStep],
+    boundary: int,
+    label: str,
+    kind: str,
+    method_label: str | None,
+) -> None:
+    if not seq:
+        st.info("Không có bước nào để hiển thị.")
         return
 
-    if not initial_results and not modi_results and lp_result is None:
-        st.info("Chưa có kết quả.")
-        return
+    state_key = f"journey_{label}"
+    seq_len = len(seq)
 
-    stage_options = []
-    if initial_results:
-        stage_options.append("1. Tìm điểm xuất phát")
-    if modi_results:
-        stage_options.append("2. MODI tối ưu hóa")
-    if lp_result is not None:
-        stage_options.append("3. LP tối ưu")
-
-    stage = st.radio("Giai đoạn", stage_options, horizontal=True, key="step_stage")
-
-    if stage.startswith("1."):
-        method = st.selectbox("Phương pháp điểm xuất phát", list(initial_results.keys()), key="step_initial_method")
-        result = initial_results[method]
-        _render_step_sequence(
-            problem,
-            result,
-            result.steps,
-            state_key=f"initial_{method}",
-            heading=f"Giai đoạn 1 - {method}: tạo phương án cơ sở ban đầu",
-        )
-        return
-
-    if stage.startswith("2."):
-        method = st.selectbox("MODI bắt đầu từ", list(modi_results.keys()), key="step_modi_method")
-        result = modi_results[method]
-        initial_result = initial_results.get(method)
-        initial_step_count = len(initial_result.steps) if initial_result is not None else 0
-        modi_steps = result.steps[initial_step_count:]
-        path_costs = [step.cost for step in modi_steps if step.cost is not None]
-        st.caption(
-            f"Bước gốc: {initial_step_count} · Vòng MODI: {len(modi_steps)} · Tổng: {len(result.steps)}"
-        )
-        if path_costs:
-            st.caption(
-                " → ".join(f"{cost:,.0f}" for cost in path_costs)
-            )
+    if kind == "method" and boundary < seq_len:
+        st.caption(f"Bước gốc: {boundary} · Vòng MODI: {seq_len - boundary} · Tổng: {seq_len}")
         st.info(
             "👀 **Cách đọc mỗi vòng:** xem **thẻ KPI** (chi phí giảm bao nhiêu · ô vào · ô ra · θ) "
             "và **heatmap phân bổ** bên phải trước; bảng số chỉ để tra chi tiết khi cần."
         )
-        _render_step_sequence(
-            problem,
-            result,
-            modi_steps,
-            state_key=f"modi_{method}",
-            heading=f"Giai đoạn 2 - MODI từ {method}: kiểm tra và tối ưu phương án",
-        )
-        return
 
-    if lp_result is not None:
-        st.markdown("#### ⚙️ Cơ chế LP (HiGHS) — đầu vào & đầu ra")
-        ci = st.columns(4)
-        ci[0].metric("Số biến (xᵢⱼ)", f"{problem.m * problem.n}")
-        ci[1].metric("Số ràng buộc", f"{problem.m + problem.n}")
-        ci[2].metric("Solver", "HiGHS (SciPy)")
-        ci[3].metric("Trạng thái", "Tối ưu" if lp_result.is_optimal else "—")
-        st.markdown("**📥 Đầu vào gửi cho solver:** ma trận chi phí $C$ (m×n), vector cung $a$, vector cầu $b$ — đóng gói thành bài LP chuẩn:")
-        st.latex(r"\min \sum_{i,j} c_{ij}x_{ij}\quad\text{với}\quad \sum_j x_{ij}=a_i,\ \ \sum_i x_{ij}=b_j,\ \ x_{ij}\ge 0")
-        st.markdown(f"**📤 Đầu ra solver trả về:** trạng thái = *optimal*, tổng chi phí $Z^* = {lp_result.total_cost:,.0f}$, và ma trận phân bổ $x^*$ (bảng bên dưới).")
-        st.caption("Khác MODI: HiGHS nạp toàn bộ bài toán một lần và trả thẳng nghiệm tối ưu — không đi từng vòng, nên chỉ có 1 'bước'.")
-        st.markdown("---")
-        _render_step_sequence(
-            problem,
-            lp_result,
-            lp_result.steps,
-            state_key="lp_steps",
-            heading="Phương án tối ưu do LP trả về",
-        )
+    step_num = _step_navigator(seq_len, state_key)
+    idx = step_num - 1
+
+    phase = _render_phase_strip(idx, boundary, seq_len) if kind == "method" else None
+
+    if kind == "lp":
+        heading = "⚡ Phương án tối ưu do LP trả về"
+    elif kind == "assignment":
+        heading = "Bài toán phân công — nghiệm tối ưu Hungarian"
+    else:
+        heading = f"🚚 Hành trình {method_label}"
+
+    _render_one_step(problem, seq, idx, heading, phase_label=phase)
 
 
-def _render_step_sequence(
+def _render_one_step(
     problem: TransportationProblem,
-    result: AlgorithmResult,
     steps: list[AlgorithmStep],
-    state_key: str,
+    idx: int,
     heading: str,
+    phase_label: str | None = None,
 ) -> None:
-    if not steps:
-        st.info("Không có bước nào để hiển thị.")
-        return
-
+    step = steps[idx]
     visible_steps = len(steps)
 
-    # Navigation: slider + prev/next buttons
-    if visible_steps == 1:
-        step_num = 1
-        st.caption("Bước 1/1")
-    else:
-        # Clamp session state to valid range when switching algos
-        slider_key = f"step_idx_{state_key}"
-        slider_kwargs = {"key": slider_key}
-        if slider_key in st.session_state:
-            clamped = max(1, min(int(st.session_state[slider_key]), visible_steps))
-            if int(st.session_state[slider_key]) != clamped:
-                st.session_state[slider_key] = clamped
-        else:
-            slider_kwargs["value"] = 1
-        col_prev, col_slider, col_next = st.columns([1, 8, 1])
-        with col_slider:
-            step_num = st.slider("Bước", 1, visible_steps, **slider_kwargs)
-        with col_prev:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("◀", key=f"prev_step_{state_key}", disabled=(step_num <= 1)):
-                st.session_state[slider_key] = step_num - 1
-                st.rerun()
-        with col_next:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("▶", key=f"next_step_{state_key}", disabled=(step_num >= visible_steps)):
-                st.session_state[slider_key] = step_num + 1
-                st.rerun()
-
-    step_idx = step_num - 1
-    step = steps[step_idx]
-
     st.markdown(f"### {heading}")
-    st.markdown(f"<div style='font-size: 1.2rem; font-weight: bold; color: #1e40af; margin-bottom: 1rem'>Bước {step_num}/{visible_steps}: {step.title}</div>", unsafe_allow_html=True)
+    badge = ""
+    if phase_label:
+        badge = (
+            f" &nbsp;<span style='background:#e0e7ff; color:#3730a3; padding:2px 8px; "
+            f"border-radius:999px; font-size:0.85rem; font-weight:600'>{phase_label}</span>"
+        )
+    st.markdown(
+        f"<div style='font-size: 1.2rem; font-weight: bold; color: #1e40af; margin-bottom: 1rem'>"
+        f"Bước {idx + 1}/{visible_steps}: {step.title}{badge}</div>",
+        unsafe_allow_html=True,
+    )
 
     left_col, right_col = st.columns([3, 2])
 
     with left_col:
         st.markdown(f"<div style='background: #eff6ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #2563eb; margin-bottom: 1.5rem'>{step.description}</div>", unsafe_allow_html=True)
-        
-        # --- Thẻ KPI: nhìn vài số là hiểu cả vòng, khỏi dò bảng ---
-        prev_cost = steps[step_idx - 1].cost if step_idx > 0 else None
+
+        # --- Thẻ KPI: nhìn vài số là hiểu cả vòng, khỏi dò bảng (delta tính xuyên giai đoạn) ---
+        prev_cost = steps[idx - 1].cost if idx > 0 else None
         kpi = st.columns(4)
         if step.cost is not None:
             delta = (step.cost - prev_cost) if prev_cost is not None else None
@@ -225,7 +291,6 @@ def _render_step_sequence(
             c1, c2 = st.columns(2)
             with c1:
                 r_df = pd.DataFrame(step.row_penalties.items(), columns=["Nguồn", "Penalty Hàng"])
-                # Highlight the max penalty
                 max_r = r_df["Penalty Hàng"].max() if not r_df.empty else 0
                 st.dataframe(r_df.style.apply(lambda s: ['background-color: #fef08a; font-weight:bold' if v == max_r and v > 0 else '' for v in s], subset=['Penalty Hàng']), hide_index=True)
             with c2:
