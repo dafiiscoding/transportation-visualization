@@ -7,6 +7,7 @@ from src.models.problem import TransportationProblem
 EXAMPLES_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "examples")
 
 EXAMPLE_LABELS = {
+    "00_slide_example": "00. Ví dụ xuyên suốt 3×4 (theo slide)",
     "01_intro_battle": "01. NW vs VAM: Sức mạnh của xấp xỉ",
     "02_greedy_trap": "02. LCM: Cái bẫy của sự tham lam",
     "03_initial_degeneracy": "03. Suy biến: Điểm thắt nút toán học",
@@ -17,6 +18,11 @@ EXAMPLE_LABELS = {
     "08_modi_climb": "08. MODI: Hành trình tối ưu hóa",
     "09_assignment": "09. Phân công: Khi mỗi người một việc",
     "10_vietnam_logistics": "10. Thực tế: Logistics 3 miền Việt Nam",
+    "11_complex_degeneracy": "11. Suy biến ẩn (Delayed Degeneracy)",
+    "12_hyperplane_multiple_optimals": "12. Đa nghiệm: Mặt phẳng nghiệm (sau leo MODI)",
+    "13_inequality_constraint": "13. Ràng buộc bất đẳng thức (≤ cung, ≥ cầu)",
+    "14_logistics_slide": "14. Logistics 5×12 (đúng số slide, Z*=120 000)",
+    "15_max_profit": "15. Tối đa LỢI NHUẬN (bài toán MAX)",
 }
 
 

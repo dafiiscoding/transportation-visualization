@@ -273,23 +273,9 @@ def main() -> None:
     warnings = get_warnings(problem)
 
     with tab1:
-        if problem.description:
-            st.markdown(f"""
-            <div style='background:#f1f5f9; border-left:4px solid #1e40af; padding:16px; border-radius:8px; margin-bottom:20px'>
-                <div style='color:#475569; font-weight:700; text-transform:uppercase; font-size:0.8rem; margin-bottom:8px'>🔍 Phân tích bối cảnh</div>
-                <div style='color:#1e293b; font-size:1.1rem; line-height:1.5'>{problem.description}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        if problem.insight:
-            st.markdown(f"""
-            <div style='background:#fff7ed; border-left:4px solid #ea580c; padding:16px; border-radius:8px; margin-bottom:20px'>
-                <div style='color:#9a3412; font-weight:700; text-transform:uppercase; font-size:0.8rem; margin-bottom:8px'>💡 Bài học rút ra (Insight)</div>
-                <div style='color:#7c2d12; font-size:1rem; font-style: italic'>{problem.insight}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
         render_problem_table(problem)
+        if not problem.is_balanced:
+            st.info("ℹ️ **Ràng buộc bất đẳng thức / lệch cung–cầu:** tổng cung ≠ tổng cầu → app tự thêm **điểm giả** hấp thụ phần chênh (cột/hàng giả = cung dư hoặc cầu thiếu). Giải thích chi tiết ở tab **📖 Hướng dẫn**.")
         for w in warnings:
             st.warning(w)
 
@@ -357,20 +343,17 @@ def main() -> None:
             render_result_overview(problem, initial_results, modi_results, lp_result, assignment_result)
             
             st.markdown("---")
-            st.subheader("🗺 Sơ đồ mạng lưới vận tải tối ưu (Network Graph)")
-            
-            # Draw network for LP result (or best result)
             best_r = lp_result if lp_result else list(_result_choices(results).values())[0] if _result_choices(results) else None
             if best_r:
-                is_large = transformed.m + transformed.n >= 12
-                if is_large:
-                    st.info("🌟 **Góc nhìn vĩ mô (Macro View):** Với mạng lưới phức tạp (nhiều điểm cung/cầu), biểu đồ sẽ tự động ẩn các con số chi phí để tập trung hiển thị **luồng phân phối chính** (các đường nối đậm). Đây chính là cách LP Solver bao quát toàn cục hệ thống thay vì sa đà vào tính toán cục bộ.")
+                if transformed.m + transformed.n > 12:
+                    st.subheader("🗺 Sơ đồ mạng lưới")
+                    st.caption("Mạng lưới quá lớn — sơ đồ sẽ rối và khó đọc nên được ẩn. Xem **bảng phân bổ** (tab Dữ liệu / Export) để rõ hơn.")
                 else:
-                    st.caption("Trực quan hóa cấu trúc phân bổ hàng hóa giữa các điểm Phát và Thu. Đường nối càng đậm, lượng phân bổ càng lớn.")
-
-                show_labels = st.checkbox("Hiển thị nhãn chi phí trên đường nối", value=not is_large)
-                fig_net = plot_network(transformed, best_r, show_labels=show_labels, figsize=(14, 8))
-                st.pyplot(fig_net, use_container_width=True)
+                    st.subheader("🗺 Sơ đồ mạng lưới vận tải tối ưu")
+                    st.caption("Đường nối càng đậm, lượng phân bổ càng lớn.")
+                    show_labels = st.checkbox("Hiển thị nhãn chi phí trên đường nối", value=True)
+                    fig_net = plot_network(transformed, best_r, show_labels=show_labels, figsize=(12, 7))
+                    st.pyplot(fig_net, use_container_width=True)
 
         with tab3:
             render_step_panel(transformed, initial_results, modi_results, lp_result, assignment_result)

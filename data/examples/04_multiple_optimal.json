@@ -1,14 +1,14 @@
 {
   "name": "Đa nghiệm: Lựa chọn của nhà quản trị",
-  "description": "Trường hợp hiếm hoi khi bài toán tồn tại nhiều hơn một lộ trình vận tải cho cùng mức chi phí thấp nhất. Các ô phi cơ sở có chỉ số Delta bằng 0 chính là dấu hiệu của các phương án dự phòng.",
-  "insight": "Toán học cho ta con số, nhưng con người chọn giải pháp. Nhà quản trị có thể ưu tiên phương án phân tán hàng hóa để giảm rủi ro hỏng hóc, hoặc tập trung hàng hóa vào ít tuyến đường để dễ kiểm soát. Cả hai đều đạt hiệu quả kinh tế tối đa.",
+  "description": "Bài toán 3×3 với chi phí PHÂN BIỆT (không phải toàn số giống nhau). Nghiệm tối ưu Z* = 580 là duy nhất về chi phí, nhưng tại bảng tối ưu có một ô phi cơ sở mang chỉ số Delta = 0 — dấu hiệu kinh điển của đa nghiệm: tồn tại phương án vận tải khác với CÙNG chi phí thấp nhất.",
+  "insight": "Vì có ô Delta = 0, đẩy hàng vào tuyến đó theo chu trình cho ra một ĐỈNH tối ưu thứ hai (cùng Z* = 580). Tập nghiệm tối ưu vì thế là cả một ĐOẠN THẲNG nối hai đỉnh: mọi tổ hợp lồi x = λx₁ + (1−λ)x₂ đều tối ưu (vô số phương án). Toán học cho con số, nhà quản trị chọn phương án: gom hàng vào ít tuyến để dễ kiểm soát, hay phân tán để giảm rủi ro — đều đạt hiệu quả kinh tế như nhau.",
   "problem_type": "min",
-  "sources": ["Kho Hà Nội", "Kho Đà Nẵng"],
-  "destinations": ["Đại lý 1", "Đại lý 2"],
-  "supply": [100, 100],
-  "demand": [100, 100],
-  "cost": [[5, 5], [5, 5]],
+  "sources": ["Kho A", "Kho B", "Kho C"],
+  "destinations": ["Đại lý 1", "Đại lý 2", "Đại lý 3"],
+  "supply": [40, 30, 50],
+  "demand": [20, 30, 70],
+  "cost": [[6, 6, 5], [3, 4, 3], [4, 9, 6]],
   "key_highlights": [
-    {"stage": "2. MODI tối ưu hóa", "method": "Góc Tây Bắc (NW)", "step": 2, "label": "Tối ưu nhưng tồn tại Delta=0"}
+    {"stage": "2. MODI tối ưu hóa", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "Tối ưu Z*=580 nhưng tồn tại Delta=0"}
   ]
 }

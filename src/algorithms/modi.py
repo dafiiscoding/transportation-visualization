@@ -242,6 +242,8 @@ def modi(problem: TransportationProblem, initial_result: AlgorithmResult) -> Alg
             deltas=deltas.copy(),
             cycle=cycle_with_sign,
             cost=new_cost,
+            theta=theta,
+            leaving_cell=leaving,
         ))
 
         iteration += 1

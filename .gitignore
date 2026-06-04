@@ -3,6 +3,7 @@ __pycache__/
 *.pyo
 .env
 .venv
+.venv-app/
 venv/
 *.egg-info/
 dist/
@@ -11,3 +12,8 @@ build/
 .streamlit/secrets.toml
 *.csv
 !data/templates/transportation_template.csv
+
+# Logs & local runtime artifacts
+*.log
+*.err
+.freeport

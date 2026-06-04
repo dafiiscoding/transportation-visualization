@@ -18,3 +18,5 @@ class AlgorithmStep:
     deltas: np.ndarray | None = None
     cycle: list[tuple[int, int, str]] | None = None
     cost: float | None = None
+    theta: float | None = None
+    leaving_cell: tuple[int, int] | None = None

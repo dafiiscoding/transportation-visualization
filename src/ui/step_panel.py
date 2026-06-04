@@ -91,6 +91,10 @@ def render_step_panel(
             st.caption(
                 " → ".join(f"{cost:,.0f}" for cost in path_costs)
             )
+        st.info(
+            "👀 **Cách đọc mỗi vòng:** xem **thẻ KPI** (chi phí giảm bao nhiêu · ô vào · ô ra · θ) "
+            "và **heatmap phân bổ** bên phải trước; bảng số chỉ để tra chi tiết khi cần."
+        )
         _render_step_sequence(
             problem,
             result,
@@ -101,12 +105,23 @@ def render_step_panel(
         return
 
     if lp_result is not None:
+        st.markdown("#### ⚙️ Cơ chế LP (HiGHS) — đầu vào & đầu ra")
+        ci = st.columns(4)
+        ci[0].metric("Số biến (xᵢⱼ)", f"{problem.m * problem.n}")
+        ci[1].metric("Số ràng buộc", f"{problem.m + problem.n}")
+        ci[2].metric("Solver", "HiGHS (SciPy)")
+        ci[3].metric("Trạng thái", "Tối ưu" if lp_result.is_optimal else "—")
+        st.markdown("**📥 Đầu vào gửi cho solver:** ma trận chi phí $C$ (m×n), vector cung $a$, vector cầu $b$ — đóng gói thành bài LP chuẩn:")
+        st.latex(r"\min \sum_{i,j} c_{ij}x_{ij}\quad\text{với}\quad \sum_j x_{ij}=a_i,\ \ \sum_i x_{ij}=b_j,\ \ x_{ij}\ge 0")
+        st.markdown(f"**📤 Đầu ra solver trả về:** trạng thái = *optimal*, tổng chi phí $Z^* = {lp_result.total_cost:,.0f}$, và ma trận phân bổ $x^*$ (bảng bên dưới).")
+        st.caption("Khác MODI: HiGHS nạp toàn bộ bài toán một lần và trả thẳng nghiệm tối ưu — không đi từng vòng, nên chỉ có 1 'bước'.")
+        st.markdown("---")
         _render_step_sequence(
             problem,
             lp_result,
             lp_result.steps,
             state_key="lp_steps",
-            heading="Giai đoạn kiểm chứng - LP là mốc tối ưu toàn cục",
+            heading="Phương án tối ưu do LP trả về",
         )
 
 
@@ -162,8 +177,24 @@ def _render_step_sequence(
     with left_col:
         st.markdown(f"<div style='background: #eff6ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #2563eb; margin-bottom: 1.5rem'>{step.description}</div>", unsafe_allow_html=True)
         
+        # --- Thẻ KPI: nhìn vài số là hiểu cả vòng, khỏi dò bảng ---
+        prev_cost = steps[step_idx - 1].cost if step_idx > 0 else None
+        kpi = st.columns(4)
         if step.cost is not None:
-            st.metric("💰 Tổng chi phí tại bước này", f"{step.cost:,.0f}")
+            delta = (step.cost - prev_cost) if prev_cost is not None else None
+            kpi[0].metric(
+                "💰 Chi phí", f"{step.cost:,.0f}",
+                f"{delta:+,.0f}" if delta not in (None, 0) else None,
+                delta_color="inverse",
+            )
+        if step.selected_cell is not None:
+            r, c = step.selected_cell
+            kpi[1].metric("➕ Ô vào", f"{problem.sources[r]}→{problem.destinations[c]}")
+        if step.leaving_cell is not None:
+            r, c = step.leaving_cell
+            kpi[2].metric("➖ Ô ra", f"{problem.sources[r]}→{problem.destinations[c]}")
+        if step.theta is not None:
+            kpi[3].metric("θ (lượng dịch)", f"{step.theta:,.0f}")
 
         # Cycle - High visibility for MODI
         if step.cycle:
@@ -174,19 +205,18 @@ def _render_step_sequence(
             st.markdown(f"**🔄 Chu trình điều chỉnh:**<br>{cycle_str}", unsafe_allow_html=True)
             st.markdown("<div style='margin-bottom: 1.5rem'></div>", unsafe_allow_html=True)
 
-        st.markdown("**📋 Bảng làm bài (Tableau):**")
-        tableau = build_transportation_tableau(problem, step.allocation, step)
-        
-        # Style the tableau
-        def style_tableau(val):
-            if "⬅" in val: return "background-color: #dbeafe; font-weight: bold"
-            if "(+)" in val: return "background-color: #d1fae5; font-weight: bold"
-            if "(-)" in val: return "background-color: #fee2e2; font-weight: bold"
-            if "Δ:+" in val: return "color: #b91c1c; font-weight: bold"
-            return ""
+        with st.expander("📋 Bảng làm bài chi tiết (Tableau)"):
+            tableau = build_transportation_tableau(problem, step.allocation, step)
 
-        st.dataframe(tableau.style.map(style_tableau), width="stretch")
-        st.caption("Ký hiệu: `[Chi phí]` | `Phân bổ` | `Δ: Cơ hội tối ưu` | `(±) Chu trình` | `⬅ Ô đang xét` ")
+            def style_tableau(val):
+                if "⬅" in val: return "background-color: #dbeafe; font-weight: bold"
+                if "(+)" in val: return "background-color: #d1fae5; font-weight: bold"
+                if "(-)" in val: return "background-color: #fee2e2; font-weight: bold"
+                if "Δ:+" in val: return "color: #b91c1c; font-weight: bold"
+                return ""
+
+            st.dataframe(tableau.style.map(style_tableau), width="stretch")
+            st.caption("Ký hiệu: `[Chi phí]` | `Phân bổ` | `Δ: Cơ hội tối ưu` | `(±) Chu trình` | `⬅ Ô đang xét` ")
 
         if step.row_penalties is not None and step.col_penalties is not None:
             st.markdown("---")
@@ -211,37 +241,33 @@ def _render_step_sequence(
             fig_delta = plot_delta_heatmap(problem, step)
             st.pyplot(fig_delta, width="stretch")
 
-    # Potentials and deltas - More prominent for MODI
+    # Thế vị & Delta — gập vào expander, nêu rõ mục đích
     if step.potentials or step.deltas is not None:
-        st.markdown("---")
-        st.markdown("#### 🔢 Phân tích Thế vị & Delta")
-        c1, c2 = st.columns([1, 2])
-        
-        with c1:
-            if step.potentials:
-                st.markdown("**Thế vị nguồn ($u_i$):**")
-                u_df = pd.DataFrame(step.potentials["u"].items(), columns=["Nguồn", "u_i"])
-                st.dataframe(u_df, hide_index=True)
-                
-                st.markdown("**Thế vị đích ($v_j$):**")
-                v_df = pd.DataFrame(step.potentials["v"].items(), columns=["Đích", "v_j"])
-                st.dataframe(v_df, hide_index=True)
+        with st.expander("🔢 Chi tiết Thế vị & Δ — vì sao chọn ô vào"):
+            st.caption("Δ tính cho ô NGOÀI cơ sở; **Δ dương lớn nhất ⇒ ô được đưa vào cơ sở** vòng này. Ô đỏ (Δ>0) là cơ hội giảm chi phí.")
+            c1, c2 = st.columns([1, 2])
+            with c1:
+                if step.potentials:
+                    st.markdown("**Thế vị nguồn ($u_i$):**")
+                    u_df = pd.DataFrame(step.potentials["u"].items(), columns=["Nguồn", "u_i"])
+                    st.dataframe(u_df, hide_index=True)
+                    st.markdown("**Thế vị đích ($v_j$):**")
+                    v_df = pd.DataFrame(step.potentials["v"].items(), columns=["Đích", "v_j"])
+                    st.dataframe(v_df, hide_index=True)
+            with c2:
+                if step.deltas is not None:
+                    st.markdown(r"**Ma trận Delta ($\Delta_{ij} = u_i + v_j - c_{ij}$):**")
+                    pm2, pn2 = problem.m, problem.n
+                    delta_display = step.deltas[:pm2, :pn2].copy()
+                    df_d = pd.DataFrame(
+                        delta_display,
+                        index=problem.sources[:pm2],
+                        columns=problem.destinations[:pn2],
+                    )
 
-        with c2:
-            if step.deltas is not None:
-                st.markdown("**Ma trận Delta ($\Delta_{ij} = u_i + v_j - c_{ij}$):**")
-                pm2, pn2 = problem.m, problem.n
-                delta_display = step.deltas[:pm2, :pn2].copy()
-                df_d = pd.DataFrame(
-                    delta_display,
-                    index=problem.sources[:pm2],
-                    columns=problem.destinations[:pn2],
-                )
-                
-                def color_delta(v):
-                    if pd.isna(v): return "background-color: #f1f5f9; color: #94a3b8" # basic
-                    if v > 0: return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
-                    return "background-color: #d1fae5; color: #065f46"
+                    def color_delta(v):
+                        if pd.isna(v): return "background-color: #f1f5f9; color: #94a3b8"
+                        if v > 0: return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
+                        return "background-color: #d1fae5; color: #065f46"
 
-                st.dataframe(df_d.style.map(color_delta), width="stretch")
-                st.caption("Ô màu đỏ ($\Delta > 0$): còn có thể giảm chi phí.")
+                    st.dataframe(df_d.style.map(color_delta), width="stretch")

@@ -1,18 +1,14 @@
 {
   "name": "Cầu > Cung: Quyết định cắt giảm (Shortage)",
-  "description": "Nhu cầu thị trường (160 đơn vị) vượt quá khả năng đáp ứng của kho (120 đơn vị). Hệ thống sinh ra một 'Nguồn ảo' (Dummy Source) để bù đắp sự thiếu hụt.",
-  "insight": "Nguồn ảo đại diện cho lượng 'hàng không được giao'. Nếu ta gán chi phí phạt (Penalty Cost) vi phạm hợp đồng vào hàng Dummy này, thuật toán sẽ cắt giảm hàng của khách có mức phạt thấp và dồn mọi nguồn lực để đảm bảo đủ hàng cho đối tác VIP có mức phạt cao.",
+  "description": "Tổng nhu cầu (160) vượt tổng năng lực cung ứng (140), thiếu hụt 20 đơn vị. Hệ thống tự sinh một 'Nguồn ảo' (Dummy Source, chi phí 0) để hấp thụ phần cầu không được đáp ứng. Ô nào nhận hàng từ nguồn ảo chính là nơi bị cắt giảm.",
+  "insight": "Thuật toán cắt giảm ở nơi 'ít thiệt nhất' về chi phí: TP xa có chi phí vận chuyển đắt nhất (14–15$/đơn vị) từ cả hai nhà máy, nên 20 đơn vị thiếu hụt dồn hết vào đây — hai thành phố gần và vừa vẫn được phục vụ đủ. Đây là logic 'ưu tiên giữ khách rẻ-để-phục-vụ' khi nguồn lực khan hiếm.",
   "problem_type": "min",
-  "sources": ["Kho Trung tâm"],
-  "destinations": ["Khách thường (Phạt nhẹ)", "Đối tác VIP (Phạt nặng)"],
-  "supply": [120],
-  "demand": [80, 80],
-  "cost": [[5, 5]],
-  "metadata": {
-    "dummy_costs": [5, 1000]
-  },
+  "sources": ["NM Hà Nội", "NM Cần Thơ"],
+  "destinations": ["TP gần", "TP vừa", "TP xa"],
+  "supply": [80, 60],
+  "demand": [60, 50, 50],
+  "cost": [[3, 7, 15], [6, 5, 14]],
   "key_highlights": [
-    {"stage": "1. Tìm điểm xuất phát", "method": "Xấp xỉ Vogel (VAM)", "step": 1, "label": "VAM bảo vệ đối tác VIP"},
-    {"stage": "3. LP tối ưu", "method": "LP tối ưu", "step": 1, "label": "Kết quả: Khách thường chịu thiệt"}
+    {"stage": "3. LP tối ưu", "method": "LP tối ưu", "step": 1, "label": "TP xa gánh toàn bộ phần thiếu (20 đv)"}
   ]
 }

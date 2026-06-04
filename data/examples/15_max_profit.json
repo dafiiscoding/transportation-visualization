@@ -1,0 +1,14 @@
+{
+  "name": "Tối đa LỢI NHUẬN: Phân bổ sản xuất theo vùng",
+  "description": "Bài toán DẠNG MAX: ma trận thể hiện LỢI NHUẬN (đơn vị tiền) khi giao hàng từ mỗi xưởng tới mỗi vùng, mục tiêu là TỐI ĐA hóa tổng lợi nhuận. Hệ thống ngầm đổi sang bài toán cực tiểu bằng C_new = M − C_old (M = lợi nhuận lớn nhất), giải tìm min rồi quy ngược lại thành lợi nhuận cực đại.",
+  "insight": "Lợi nhuận tối ưu Z* = 1510. Đây là ví dụ kiểm chứng tính năng MAX của ứng dụng: cùng một bộ thuật toán cực tiểu (NW, LCM, VAM, MODI, LP) vẫn giải đúng bài toán cực đại nhờ phép biến đổi 'đảo dấu' ma trận. Thuật toán dồn hàng vào các cặp xưởng–vùng có lợi nhuận đơn vị cao nhất (Xưởng 1→Vùng C = 15, Xưởng 2→Vùng B = 14).",
+  "problem_type": "max",
+  "sources": ["Xưởng 1", "Xưởng 2", "Xưởng 3"],
+  "destinations": ["Vùng A", "Vùng B", "Vùng C", "Vùng D"],
+  "supply": [40, 50, 30],
+  "demand": [30, 30, 30, 30],
+  "cost": [[12, 9, 15, 8], [10, 14, 7, 11], [9, 8, 13, 10]],
+  "key_highlights": [
+    {"stage": "3. LP tối ưu", "method": "LP tối ưu", "step": 1, "label": "Lợi nhuận cực đại Z*=1510"}
+  ]
+}

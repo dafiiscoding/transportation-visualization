@@ -159,9 +159,7 @@ Sau khi bấm **▶ Chạy**, tab **📊 Kết quả** hiển thị:
 |---|---|
 | Phương pháp / Bắt đầu từ | Nguồn tạo phương án |
 | Chi phí / Lợi nhuận | Giá trị của phương án |
-| Cách mốc tối ưu | Khoảng cách tuyệt đối và % so với LP |
-| Số bước | Số bước lập phương án hoặc số vòng MODI |
-| Đường đi | Chuỗi giá trị qua từng vòng MODI |
+| Bước gốc / Vòng MODI | Số bước lập phương án và số vòng cải thiện |
 
 **Biểu đồ thanh:** So sánh trực quan các phương án, đường đỏ đứt = mốc LP tối ưu.
 
@@ -231,6 +229,16 @@ Tab **💾 Export** cho phép tải về kết quả dưới nhiều định d�
     # ── Section 8: Tips & edge cases ─────────────────────────────────────────
     with st.expander("8️⃣  Lưu ý & các trường hợp đặc biệt"):
         st.markdown("""
+**Quy tắc phá hòa — khi nhiều ô "ngang điểm" (KHÔNG random)**
+- Khi penalty (Vogel), chi phí (LCM) hoặc Δ (MODI) **bằng nhau**, app chọn theo **quy tắc cố định**, không ngẫu nhiên:
+  - **Vogel & LCM:** ưu tiên ô phân bổ được **nhiều hàng nhất** (min(cung,cầu) lớn nhất) → rồi **chỉ số hàng nhỏ hơn** → **cột nhỏ hơn**.
+  - **MODI:** ô vào = Δ dương lớn nhất, hòa thì lấy **(i, j) nhỏ nhất**; ô ra = ô có lượng nhỏ nhất trên nhánh trừ của chu trình.
+- Ý nghĩa: ưu tiên "nhiều hàng" giúp **giảm số bước**. Khi hòa, chọn ô nào **không đổi giá trị tối ưu cuối** — chỉ đổi *đường đi*. Nếu ở nghiệm tối ưu còn ô ngoài cơ sở có **Δ = 0** thì bài toán có **đa nghiệm** (nhiều phương án cùng chi phí).
+
+**Ràng buộc bất đẳng thức (≤ cung, ≥ cầu)**
+- Khi điểm phát *không bắt buộc phát hết* (Σx ≤ cung) và điểm thu *nhận không ít hơn* nhu cầu (Σx ≥ cầu): bài toán **có nghiệm ⟺ tổng cung ≥ tổng cầu**.
+- App **không có ô nhập riêng** cho dạng này vì nó **chính là trường hợp lệch cung–cầu**: hệ thống tự thêm **điểm giả** (chi phí 0) hấp thụ phần chênh. Cột/hàng giả trong nghiệm = **phần cung dư** (hoặc cầu thiếu). Thử ngay ví dụ **"13. Ràng buộc bất đẳng thức"**.
+
 **Bài toán không cân bằng (unbalanced)**
 - Tổng cung ≠ tổng cầu → ứng dụng tự thêm nguồn/đích ảo với chi phí = 0.
 - Phần dư của nguồn/đích ảo trong kết quả = lượng hàng tồn kho hoặc thiếu hụt.
