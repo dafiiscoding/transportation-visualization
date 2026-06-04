@@ -138,9 +138,8 @@ Demand  150   70  100
 
 ### LP Solver
 - **Cách làm:** Giải bài toán quy hoạch tuyến tính bằng HiGHS solver (scipy).
-- **Vai trò trong app:** Là mốc tối ưu toàn cục. LP không cần so với chính nó.
+- **Vai trò trong app:** Cho nghiệm tối ưu chuẩn để đối chiếu với NW/LCM/VAM/MODI.
 - **Dùng khi:** Cần nghiệm chuẩn, hoặc bài toán lớn (>6×6).
-- **Cách đọc:** Các phương pháp khác được ghi rõ còn cách mốc LP bao nhiêu.
         """)
 
     # ── Section 4: Đọc kết quả ───────────────────────────────────────────────
@@ -148,20 +147,17 @@ Demand  150   70  100
         st.markdown("""
 Sau khi bấm **▶ Chạy**, tab **📊 Kết quả** hiển thị:
 
-**Hàng metrics trên cùng:**
-- Điểm xuất phát tốt nhất.
-- Kết quả MODI tốt nhất.
-- Mốc LP tối ưu toàn cục.
+**Metric nổi bật:** giá trị nghiệm tối ưu — Chi phí (bài min) hoặc Lợi nhuận (bài max).
 
-**Các bảng kết quả:**
+**🏆 Bảng so sánh tổng hợp:**
 
 | Cột | Ý nghĩa |
 |---|---|
-| Phương pháp / Bắt đầu từ | Nguồn tạo phương án |
-| Chi phí / Lợi nhuận | Giá trị của phương án |
-| Bước gốc / Vòng MODI | Số bước lập phương án và số vòng cải thiện |
+| Phương pháp | Thuật toán tạo phương án |
+| Bước gốc / Vòng MODI / Tổng bước | Số bước lập phương án và số vòng cải thiện |
+| Chi phí / Lợi nhuận | Giá trị cuối của phương án (hàng tốt nhất được tô xanh) |
 
-**Biểu đồ thanh:** So sánh trực quan các phương án, đường đỏ đứt = mốc LP tối ưu.
+**Biểu đồ thanh:** so sánh trực quan các phương án. Nếu bài toán có **đa nghiệm**, phần kết luận sẽ mô tả **diện nghiệm tối ưu** (đoạn thẳng / tam giác / … kèm phương trình tổ hợp lồi).
 
 > **Tip:** MODI không nằm chung danh sách với thuật toán điểm xuất phát; nó là giai đoạn tối ưu hóa sau NW/LCM/VAM.
         """)

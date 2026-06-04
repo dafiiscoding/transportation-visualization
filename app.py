@@ -194,6 +194,20 @@ def _result_choices(results: dict) -> dict[str, AlgorithmResult]:
     return choices
 
 
+def _problem_signature(problem: TransportationProblem, is_assignment: bool) -> tuple:
+    """Chữ ký nhận diện bài toán hiện tại — đổi ví dụ/loại bài là chữ ký đổi theo."""
+    return (
+        problem.name,
+        problem.problem_type,
+        problem.m,
+        problem.n,
+        float(problem.supply.sum()),
+        float(problem.demand.sum()),
+        problem.cost.tobytes(),
+        is_assignment,
+    )
+
+
 def main() -> None:
     st.set_page_config(
         page_title="Transportation Algorithm Visualizer",
@@ -302,6 +316,13 @@ def main() -> None:
     if run_clicked:
         st.session_state["run_triggered_from_tab"] = False
 
+    # Nếu đã có kết quả nhưng người dùng đã ĐỔI sang bài toán khác (chọn ví dụ
+    # khác, đổi min/max, sửa dữ liệu...) thì tự tính lại — tránh hiển thị kết quả
+    # CŨ của bài trước (ví dụ luôn thấy 00) cho bài vừa chọn.
+    current_sig = _problem_signature(problem, is_assignment)
+    if "results" in st.session_state and st.session_state.get("results_sig") != current_sig:
+        run_clicked = True
+
     # Run when button pressed
     if run_clicked or "results" in st.session_state:
         if run_clicked:
@@ -316,6 +337,7 @@ def main() -> None:
             st.session_state["results"] = results
             st.session_state["problem"] = problem
             st.session_state["transformed"] = results["transformed"]
+            st.session_state["results_sig"] = current_sig
         else:
             results = st.session_state.get("results", {})
             problem = st.session_state.get("problem", problem)
