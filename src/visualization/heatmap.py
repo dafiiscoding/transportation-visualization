@@ -146,6 +146,127 @@ def plot_delta_heatmap(
     return fig
 
 
+def plot_modi_tableau(
+    problem: TransportationProblem,
+    step: AlgorithmStep,
+    prev_allocation: np.ndarray | None = None,
+    title: str | None = None,
+    figsize: tuple[float, float] | None = None,
+) -> plt.Figure:
+    """Bảng vận tải kiểu báo cáo: chi phí góc trên-trái, lượng phân đậm góc dưới-phải,
+    thế vị u_i/v_j ở lề, Δ có cung, chu trình điều chỉnh +/- nối nét đứt.
+    `prev_allocation`: nếu có, tô vàng các ô thay đổi so với bước trước."""
+    pm, pn = problem.m, problem.n
+    alloc = step.allocation[:pm, :pn]
+    costs = problem.cost[:pm, :pn]
+    deltas = step.deltas[:pm, :pn] if step.deltas is not None else None
+    u = step.potentials["u"] if step.potentials else None
+    v = step.potentials["v"] if step.potentials else None
+    cycle = step.cycle or []
+    cycle_signs = {(r, c): s for r, c, s in cycle}
+    sel = step.selected_cell
+    leave = step.leaving_cell
+    prev = prev_allocation[:pm, :pn] if prev_allocation is not None else None
+
+    if figsize is None:
+        figsize = (1.15 * pn + 2.0, 0.92 * pm + 1.5)
+    fig, ax = plt.subplots(figsize=figsize)
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
+
+    def bl(i, j):  # bottom-left corner of cell (i,j)
+        return j, pm - 1 - i
+
+    # --- cell fills + borders ---
+    for i in range(pm):
+        for j in range(pn):
+            x, y = bl(i, j)
+            face = "white"
+            if prev is not None and abs(alloc[i, j] - prev[i, j]) > EPSILON:
+                face = "#fde68a"          # ô thay đổi so với bước trước
+            elif alloc[i, j] > EPSILON:
+                face = "#fff7d6"          # ô cơ sở
+            if costs[i, j] >= BIG_M / 2:
+                face = "#e5e7eb"          # ô cấm
+            ax.add_patch(mpatches.Rectangle((x, y), 1, 1, facecolor=face,
+                                            edgecolor="#475569", linewidth=1.0, zorder=1))
+
+    # --- cost (top-left), allocation (bottom-right), delta (with arc) ---
+    for i in range(pm):
+        for j in range(pn):
+            x, y = bl(i, j)
+            c_val = costs[i, j]
+            cstr = "M" if c_val >= BIG_M / 2 else f"{c_val:.0f}"
+            ax.text(x + 0.07, y + 0.92, cstr, ha="left", va="top", fontsize=9, color="#334155", zorder=3)
+            xv = alloc[i, j]
+            if xv > EPSILON:
+                ax.text(x + 0.92, y + 0.08, f"{xv:.0f}", ha="right", va="bottom",
+                        fontsize=13, fontweight="bold", color="#0f172a", zorder=3)
+            elif deltas is not None and not np.isnan(deltas[i, j]):
+                d = float(deltas[i, j])
+                ax.add_patch(mpatches.Arc((x + 1, y), 0.5, 0.78, theta1=90, theta2=180,
+                                          color="#94a3b8", lw=0.8, zorder=2))
+                ax.text(x + 0.92, y + 0.08, f"{d:+.0f}", ha="right", va="bottom", fontsize=9,
+                        color="#b91c1c" if d > 0 else "#475569",
+                        fontweight="bold" if d > 0 else "normal", zorder=3)
+
+    # --- margins: source/dest names, potentials u/v, supply/demand a/b ---
+    for j in range(pn):
+        cx = j + 0.5
+        ax.text(cx, pm + 1.05, str(problem.destinations[j]), ha="center", va="center",
+                fontsize=8, color="#1e293b", fontweight="bold")
+        if v is not None:
+            ax.text(cx, pm + 0.58, f"{v[problem.destinations[j]]:.0f}", ha="center", va="center",
+                    fontsize=8.5, color="#7c3aed", fontweight="bold")
+        ax.text(cx, pm + 0.2, f"{problem.demand[j]:.0f}", ha="center", va="center",
+                fontsize=9, color="#475569")
+    for i in range(pm):
+        cy = pm - 1 - i + 0.5
+        ax.text(-0.92, cy, str(problem.sources[i]), ha="right", va="center",
+                fontsize=8, color="#1e293b", fontweight="bold")
+        if u is not None:
+            ax.text(-0.55, cy, f"{u[problem.sources[i]]:.0f}", ha="center", va="center",
+                    fontsize=8.5, color="#7c3aed", fontweight="bold")
+        ax.text(-0.2, cy, f"{problem.supply[i]:.0f}", ha="center", va="center",
+                fontsize=9, color="#475569")
+    if u is not None:
+        ax.text(-0.55, pm + 0.58, r"$u_i$", ha="center", va="center", fontsize=7.5, color="#a78bfa")
+    if v is not None:
+        ax.text(-0.2, pm + 0.58, r"$a_i$", ha="center", va="center", fontsize=7.5, color="#94a3b8")
+
+    # --- cycle: +/- markers + dotted closed loop ---
+    if cycle:
+        pts = []
+        for r, c, _s in cycle:
+            cx, cy = c + 0.5, pm - 1 - r + 0.5
+            pts.append((cx, cy))
+        loop = pts + [pts[0]]
+        xs, ys = zip(*loop)
+        ax.plot(xs, ys, ls=(0, (2, 2)), color="#dc2626", lw=1.4, zorder=4)
+        for (r, c, s), (cx, cy) in zip(cycle, pts):
+            ax.add_patch(mpatches.Ellipse((cx, cy), 0.46, 0.40, facecolor="white",
+                                          edgecolor="#dc2626", lw=1.4, ls=":", zorder=5))
+            ax.text(cx, cy, s, ha="center", va="center", fontsize=12, fontweight="bold",
+                    color="#dc2626", zorder=6)
+
+    # --- selected / leaving emphasis ---
+    if sel and sel[0] < pm and sel[1] < pn:
+        x, y = bl(*sel)
+        ax.add_patch(mpatches.Rectangle((x, y), 1, 1, fill=False, edgecolor="#059669", lw=2.6, zorder=7))
+    if leave and leave[0] < pm and leave[1] < pn:
+        x, y = bl(*leave)
+        ax.add_patch(mpatches.Rectangle((x, y), 1, 1, fill=False, edgecolor="#dc2626", lw=2.0, ls="--", zorder=7))
+
+    ax.set_xlim(-2.3, pn + 0.15)
+    ax.set_ylim(-0.15, pm + 1.35)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    if title:
+        ax.set_title(title, fontsize=11, fontweight="bold", color="#1e293b", pad=6)
+    fig.tight_layout()
+    return fig
+
+
 def build_transportation_tableau(
     problem: TransportationProblem,
     allocation: np.ndarray,

@@ -4,15 +4,15 @@
   "insight": "Nghiệm tối ưu Z* = 450. Phương pháp Vogel đạt được nghiệm này ngay từ bước đầu tiên (không cần qua vòng lặp MODI nào). Trong khi đó, Góc Tây Bắc (Z=690) cần tới 3 vòng lặp MODI để tối ưu hóa.",
   "problem_type": "min",
   "sources": [
-    "Trạm phát A1",
-    "Trạm phát A2",
-    "Trạm phát A3"
+    "P1",
+    "P2",
+    "P3"
   ],
   "destinations": [
-    "Điểm thu B1",
-    "Điểm thu B2",
-    "Điểm thu B3",
-    "Điểm thu B4"
+    "T1",
+    "T2",
+    "T3",
+    "T4"
   ],
   "supply": [
     50,

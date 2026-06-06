@@ -8,6 +8,7 @@ from src.visualization.heatmap import (
     build_transportation_tableau,
     plot_allocation_heatmap,
     plot_delta_heatmap,
+    plot_modi_tableau,
 )
 
 
@@ -299,12 +300,37 @@ def _render_one_step(
                 st.dataframe(c_df.style.apply(lambda s: ['background-color: #fef08a; font-weight:bold' if v == max_c and v > 0 else '' for v in s], subset=['Penalty Cột']), hide_index=True)
 
     with right_col:
-        fig = plot_allocation_heatmap(problem, step.allocation, step)
-        st.pyplot(fig, width="stretch")
+        fig_tab = plot_modi_tableau(problem, step, title="Bảng vận tải (kiểu báo cáo)")
+        st.pyplot(fig_tab, width="stretch")
+        st.caption(
+            "Chi phí ở góc trên–trái, **lượng phân** đậm góc dưới–phải; "
+            "$u_i$/$v_j$ ở lề, $\\Delta_{ij}$ có cung; chu trình $+/-$ nối nét đứt đỏ "
+            "(ô vào: viền lục, ô ra: viền đỏ đứt)."
+        )
+        with st.expander("🌡️ Heatmap Δ (xem nhanh ô dương)"):
+            if step.deltas is not None:
+                st.pyplot(plot_delta_heatmap(problem, step), width="stretch")
+            else:
+                st.caption("Bước này chưa tính Δ.")
 
-        if step.deltas is not None:
-            fig_delta = plot_delta_heatmap(problem, step)
-            st.pyplot(fig_delta, width="stretch")
+    # --- Bảng vận tải TRƯỚC → SAU bước này (dễ theo dõi thay đổi) ---
+    if idx > 0:
+        prev_step = steps[idx - 1]
+        with st.expander("📊 Bảng vận tải: TRƯỚC → SAU bước này", expanded=bool(step.cycle)):
+            bcol, acol = st.columns(2)
+            with bcol:
+                st.markdown("**Trước bước**")
+                st.pyplot(
+                    plot_modi_tableau(problem, prev_step, title=f"Trước (bước {idx}/{visible_steps})"),
+                    width="stretch",
+                )
+            with acol:
+                st.markdown("**Sau bước** (ô đổi tô vàng)")
+                st.pyplot(
+                    plot_modi_tableau(problem, step, prev_allocation=prev_step.allocation,
+                                      title=f"Sau (bước {idx + 1}/{visible_steps})"),
+                    width="stretch",
+                )
 
     # Thế vị & Delta — gập vào expander, nêu rõ mục đích
     if step.potentials or step.deltas is not None:
