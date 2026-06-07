@@ -380,7 +380,7 @@ def main() -> None:
 
             if assignment_result is None:
                 st.markdown("---")
-                render_sinkhorn_panel(transformed, lp_result, modi_results)
+                render_sinkhorn_panel(problem, transformed, lp_result, modi_results)
 
         with tab3:
             render_step_panel(transformed, initial_results, modi_results, lp_result, assignment_result)

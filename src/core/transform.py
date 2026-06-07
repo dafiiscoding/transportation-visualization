@@ -37,6 +37,9 @@ def transform_problem(p: TransportationProblem) -> TransportationProblem:
     cost[forbidden] = BIG_M
 
     # Unbalanced → dummy
+    # Lưu ý: max→min đã chạy ở trên, nên dummy_costs được hiểu là chi phí TRONG
+    # không gian min. Nếu sau này có example MAX khai dummy_costs như "lợi nhuận",
+    # cần lật dấu trước khi tới đây (hiện chưa example nào dùng).
     dummy_costs = p.metadata.get("dummy_costs") if p.metadata else None
     total_s = supply.sum()
     total_d = demand.sum()

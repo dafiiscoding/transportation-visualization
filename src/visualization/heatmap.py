@@ -152,6 +152,7 @@ def plot_modi_tableau(
     prev_allocation: np.ndarray | None = None,
     title: str | None = None,
     figsize: tuple[float, float] | None = None,
+    show_exhausted: bool = False,
 ) -> plt.Figure:
     """Bảng vận tải kiểu báo cáo: chi phí góc trên-trái, lượng phân đậm góc dưới-phải,
     thế vị u_i/v_j ở lề, Δ có cung, chu trình điều chỉnh +/- nối nét đứt.
@@ -248,6 +249,25 @@ def plot_modi_tableau(
                                           edgecolor="#dc2626", lw=1.4, ls=":", zorder=5))
             ax.text(cx, cy, s, ha="center", va="center", fontsize=12, fontweight="bold",
                     color="#dc2626", zorder=6)
+
+    # --- hàng/cột đã CẠN (bước khởi tạo): gạch đỏ + số cung/cầu đỏ ---
+    if show_exhausted:
+        rs = step.remaining_supply
+        rd = step.remaining_demand
+        if rs is not None:
+            for i in range(pm):
+                if rs[i] <= EPSILON:
+                    y = pm - 1 - i + 0.5
+                    ax.plot([0, pn], [y, y], color="#dc2626", lw=1.6, alpha=0.55, zorder=6)
+                    ax.text(-0.2, y, f"{problem.supply[i]:.0f}", ha="center", va="center",
+                            fontsize=9, color="#dc2626", fontweight="bold", zorder=8)
+        if rd is not None:
+            for j in range(pn):
+                if rd[j] <= EPSILON:
+                    x = j + 0.5
+                    ax.plot([x, x], [0, pm], color="#dc2626", lw=1.6, alpha=0.55, zorder=6)
+                    ax.text(x, pm + 0.2, f"{problem.demand[j]:.0f}", ha="center", va="center",
+                            fontsize=9, color="#dc2626", fontweight="bold", zorder=8)
 
     # --- selected / leaving emphasis ---
     if sel and sel[0] < pm and sel[1] < pn:

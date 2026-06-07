@@ -215,18 +215,11 @@ def modi(problem: TransportationProblem, initial_result: AlgorithmResult) -> Alg
 
         new_cost = total_cost(allocation, cost)
 
-        cycle_desc = " → ".join(
-            f"{problem.sources[r]}→{problem.destinations[c]}({s})"
-            for (r, c), s in zip(cycle, signs)
-        )
         src_e = problem.sources[entering[0]]
         dst_e = problem.destinations[entering[1]]
         desc = (
-            f"u = {[round(float(x),2) for x in u]}, v = {[round(float(x),2) for x in v]}. "
-            f"Ô vào cơ sở: {src_e}→{dst_e} với Delta={max_delta:.2f} > 0. "
-            f"Chu trình: {cycle_desc}. "
-            f"θ = {theta:.0f}; ô rời cơ sở: {problem.sources[leaving[0]]}→{problem.destinations[leaving[1]]}. "
-            f"Chi phí giảm {old_cost - new_cost:.0f}, còn {new_cost:.0f}."
+            f"Ô {src_e}→{dst_e} có Δ dương lớn nhất ⇒ đưa vào cơ sở; "
+            f"điều chỉnh lượng hàng ±θ dọc chu trình để ô này nhận hàng mà vẫn cân bằng cung–cầu."
         )
 
         cycle_with_sign = [(r, c, s) for (r, c), s in zip(cycle, signs)]

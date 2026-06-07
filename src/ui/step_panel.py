@@ -1,4 +1,5 @@
 from __future__ import annotations
+import dataclasses
 import pandas as pd
 import streamlit as st
 from src.models.problem import TransportationProblem
@@ -239,126 +240,84 @@ def _render_one_step(
         unsafe_allow_html=True,
     )
 
-    left_col, right_col = st.columns([3, 2])
+    # --- Mô tả ngắn: bước này làm gì ---
+    st.markdown(
+        f"<div style='background: #eff6ff; padding: 0.8rem 1rem; border-radius: 8px; "
+        f"border-left: 4px solid #2563eb; margin-bottom: 1rem'>{step.description}</div>",
+        unsafe_allow_html=True,
+    )
 
-    with left_col:
-        st.markdown(f"<div style='background: #eff6ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #2563eb; margin-bottom: 1.5rem'>{step.description}</div>", unsafe_allow_html=True)
-
-        # --- Thẻ KPI: nhìn vài số là hiểu cả vòng, khỏi dò bảng (delta tính xuyên giai đoạn) ---
-        prev_cost = steps[idx - 1].cost if idx > 0 else None
-        kpi = st.columns(4)
-        if step.cost is not None:
-            delta = (step.cost - prev_cost) if prev_cost is not None else None
-            kpi[0].metric(
-                "💰 Chi phí", f"{step.cost:,.0f}",
-                f"{delta:+,.0f}" if delta not in (None, 0) else None,
-                delta_color="inverse",
-            )
-        if step.selected_cell is not None:
-            r, c = step.selected_cell
-            kpi[1].metric("➕ Ô vào", f"{problem.sources[r]}→{problem.destinations[c]}")
-        if step.leaving_cell is not None:
-            r, c = step.leaving_cell
-            kpi[2].metric("➖ Ô ra", f"{problem.sources[r]}→{problem.destinations[c]}")
-        if step.theta is not None:
-            kpi[3].metric("θ (lượng dịch)", f"{step.theta:,.0f}")
-
-        # Cycle - High visibility for MODI
-        if step.cycle:
-            cycle_str = " → ".join(
-                f"<span style='background:#fef08a; padding: 2px 6px; border-radius: 4px; font-weight:bold'>{problem.sources[r]}→{problem.destinations[c]} ({sign})</span>"
-                for r, c, sign in step.cycle
-            )
-            st.markdown(f"**🔄 Chu trình điều chỉnh:**<br>{cycle_str}", unsafe_allow_html=True)
-            st.markdown("<div style='margin-bottom: 1.5rem'></div>", unsafe_allow_html=True)
-
-        with st.expander("📋 Bảng làm bài chi tiết (Tableau)"):
-            tableau = build_transportation_tableau(problem, step.allocation, step)
-
-            def style_tableau(val):
-                if "⬅" in val: return "background-color: #dbeafe; font-weight: bold"
-                if "(+)" in val: return "background-color: #d1fae5; font-weight: bold"
-                if "(-)" in val: return "background-color: #fee2e2; font-weight: bold"
-                if "Δ:+" in val: return "color: #b91c1c; font-weight: bold"
-                return ""
-
-            st.dataframe(tableau.style.map(style_tableau), width="stretch")
-            st.caption("Ký hiệu: `[Chi phí]` | `Phân bổ` | `Δ: Cơ hội tối ưu` | `(±) Chu trình` | `⬅ Ô đang xét` ")
-
-        if step.row_penalties is not None and step.col_penalties is not None:
-            st.markdown("---")
-            st.markdown("#### 🎯 Bảng phân tích Penalty (Chi phí cơ hội)")
-            st.caption("Penalty = Hiệu số giữa 2 chi phí nhỏ nhất trong cùng một hàng hoặc cột. Thuật toán chọn hàng/cột có Penalty lớn nhất để ưu tiên phân bổ trước, nhằm tránh bị ép vào các ô có chi phí 'cắt cổ'.")
-            c1, c2 = st.columns(2)
-            with c1:
-                r_df = pd.DataFrame(step.row_penalties.items(), columns=["Nguồn", "Penalty Hàng"])
-                max_r = r_df["Penalty Hàng"].max() if not r_df.empty else 0
-                st.dataframe(r_df.style.apply(lambda s: ['background-color: #fef08a; font-weight:bold' if v == max_r and v > 0 else '' for v in s], subset=['Penalty Hàng']), hide_index=True)
-            with c2:
-                c_df = pd.DataFrame(step.col_penalties.items(), columns=["Đích", "Penalty Cột"])
-                max_c = c_df["Penalty Cột"].max() if not c_df.empty else 0
-                st.dataframe(c_df.style.apply(lambda s: ['background-color: #fef08a; font-weight:bold' if v == max_c and v > 0 else '' for v in s], subset=['Penalty Cột']), hide_index=True)
-
-    with right_col:
-        fig_tab = plot_modi_tableau(problem, step, title="Bảng vận tải (kiểu báo cáo)")
-        st.pyplot(fig_tab, width="stretch")
-        st.caption(
-            "Chi phí ở góc trên–trái, **lượng phân** đậm góc dưới–phải; "
-            "$u_i$/$v_j$ ở lề, $\\Delta_{ij}$ có cung; chu trình $+/-$ nối nét đứt đỏ "
-            "(ô vào: viền lục, ô ra: viền đỏ đứt)."
+    # --- Thẻ KPI: nhìn vài số là hiểu cả vòng ---
+    prev_cost = steps[idx - 1].cost if idx > 0 else None
+    kpi = st.columns(4)
+    if step.cost is not None:
+        delta = (step.cost - prev_cost) if prev_cost is not None else None
+        kpi[0].metric(
+            "💰 Chi phí", f"{step.cost:,.0f}",
+            f"{delta:+,.0f}" if delta not in (None, 0) else None,
+            delta_color="inverse",
         )
-        with st.expander("🌡️ Heatmap Δ (xem nhanh ô dương)"):
-            if step.deltas is not None:
-                st.pyplot(plot_delta_heatmap(problem, step), width="stretch")
-            else:
-                st.caption("Bước này chưa tính Δ.")
+    if step.selected_cell is not None:
+        r, c = step.selected_cell
+        kpi[1].metric("➕ Ô vào", f"{problem.sources[r]}→{problem.destinations[c]}")
+    if step.leaving_cell is not None:
+        r, c = step.leaving_cell
+        kpi[2].metric("➖ Ô ra", f"{problem.sources[r]}→{problem.destinations[c]}")
+    if step.theta is not None:
+        kpi[3].metric("θ (lượng dịch)", f"{step.theta:,.0f}")
 
-    # --- Bảng vận tải TRƯỚC → SAU bước này (dễ theo dõi thay đổi) ---
-    if idx > 0:
+    # --- Bảng chính: TRƯỚC (đi theo chu trình ±θ) → SAU (kết quả) ---
+    if step.cycle and idx > 0:
         prev_step = steps[idx - 1]
-        with st.expander("📊 Bảng vận tải: TRƯỚC → SAU bước này", expanded=bool(step.cycle)):
-            bcol, acol = st.columns(2)
-            with bcol:
-                st.markdown("**Trước bước**")
-                st.pyplot(
-                    plot_modi_tableau(problem, prev_step, title=f"Trước (bước {idx}/{visible_steps})"),
-                    width="stretch",
-                )
-            with acol:
-                st.markdown("**Sau bước** (ô đổi tô vàng)")
-                st.pyplot(
-                    plot_modi_tableau(problem, step, prev_allocation=prev_step.allocation,
-                                      title=f"Sau (bước {idx + 1}/{visible_steps})"),
-                    width="stretch",
-                )
+        before_step = dataclasses.replace(
+            prev_step,
+            cycle=step.cycle,
+            selected_cell=step.selected_cell,
+            leaving_cell=step.leaving_cell,
+            potentials=step.potentials,
+            deltas=step.deltas,
+        )
+        after_step = dataclasses.replace(step, cycle=[])
+        bcol, acol = st.columns(2)
+        with bcol:
+            st.markdown("**Trước — đi theo chu trình $\\pm\\theta$**")
+            st.pyplot(plot_modi_tableau(problem, before_step, title="Trước"), width="stretch")
+        with acol:
+            st.markdown("**Sau — ô thay đổi tô vàng**")
+            st.pyplot(
+                plot_modi_tableau(problem, after_step, prev_allocation=prev_step.allocation, title="Sau"),
+                width="stretch",
+            )
+    else:
+        st.pyplot(
+            plot_modi_tableau(problem, step, title="Bảng vận tải", show_exhausted=step.potentials is None),
+            width="stretch",
+        )
 
-    # Thế vị & Delta — gập vào expander, nêu rõ mục đích
-    if step.potentials or step.deltas is not None:
-        with st.expander("🔢 Chi tiết Thế vị & Δ — vì sao chọn ô vào"):
-            st.caption("Δ tính cho ô NGOÀI cơ sở; **Δ dương lớn nhất ⇒ ô được đưa vào cơ sở** vòng này. Ô đỏ (Δ>0) là cơ hội giảm chi phí.")
-            c1, c2 = st.columns([1, 2])
-            with c1:
-                if step.potentials:
-                    st.markdown("**Thế vị nguồn ($u_i$):**")
-                    u_df = pd.DataFrame(step.potentials["u"].items(), columns=["Nguồn", "u_i"])
-                    st.dataframe(u_df, hide_index=True)
-                    st.markdown("**Thế vị đích ($v_j$):**")
-                    v_df = pd.DataFrame(step.potentials["v"].items(), columns=["Đích", "v_j"])
-                    st.dataframe(v_df, hide_index=True)
-            with c2:
-                if step.deltas is not None:
-                    st.markdown(r"**Ma trận Delta ($\Delta_{ij} = u_i + v_j - c_{ij}$):**")
-                    pm2, pn2 = problem.m, problem.n
-                    delta_display = step.deltas[:pm2, :pn2].copy()
-                    df_d = pd.DataFrame(
-                        delta_display,
-                        index=problem.sources[:pm2],
-                        columns=problem.destinations[:pn2],
-                    )
+    # --- Penalty (chỉ Vogel) ---
+    if step.row_penalties is not None and step.col_penalties is not None:
+        st.markdown("#### 🎯 Penalty (chi phí cơ hội)")
+        st.caption("Penalty = hiệu hai chi phí nhỏ nhất trong cùng hàng/cột; chọn hàng/cột có penalty lớn nhất để ưu tiên phân bổ trước.")
+        c1, c2 = st.columns(2)
+        with c1:
+            r_df = pd.DataFrame(step.row_penalties.items(), columns=["Nguồn", "Penalty Hàng"])
+            max_r = r_df["Penalty Hàng"].max() if not r_df.empty else 0
+            st.dataframe(r_df.style.apply(lambda s: ['background-color: #fef08a; font-weight:bold' if v == max_r and v > 0 else '' for v in s], subset=['Penalty Hàng']), hide_index=True)
+        with c2:
+            c_df = pd.DataFrame(step.col_penalties.items(), columns=["Đích", "Penalty Cột"])
+            max_c = c_df["Penalty Cột"].max() if not c_df.empty else 0
+            st.dataframe(c_df.style.apply(lambda s: ['background-color: #fef08a; font-weight:bold' if v == max_c and v > 0 else '' for v in s], subset=['Penalty Cột']), hide_index=True)
 
-                    def color_delta(v):
-                        if pd.isna(v): return "background-color: #f1f5f9; color: #94a3b8"
-                        if v > 0: return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
-                        return "background-color: #d1fae5; color: #065f46"
+    # --- Bảng làm bài chi tiết (tuỳ chọn, gập lại) ---
+    with st.expander("📋 Bảng làm bài chi tiết (số liệu đầy đủ)"):
+        tableau = build_transportation_tableau(problem, step.allocation, step)
 
-                    st.dataframe(df_d.style.map(color_delta), width="stretch")
+        def style_tableau(val):
+            if "⬅" in val: return "background-color: #dbeafe; font-weight: bold"
+            if "(+)" in val: return "background-color: #d1fae5; font-weight: bold"
+            if "(-)" in val: return "background-color: #fee2e2; font-weight: bold"
+            if "Δ:+" in val: return "color: #b91c1c; font-weight: bold"
+            return ""
+
+        st.dataframe(tableau.style.map(style_tableau), width="stretch")
+        st.caption("Ký hiệu: `[Chi phí]` | `Phân bổ` | `Δ: Cơ hội tối ưu` | `(±) Chu trình` | `⬅ Ô đang xét`")

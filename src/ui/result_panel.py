@@ -168,6 +168,20 @@ def render_result_overview(
     if problem.problem_type == "max":
         st.info("💡 **Ghi chú bài toán MAX (Tối đa lợi nhuận):** Các thuật toán giải (NW, LCM, VAM, MODI) bản chất là đi tìm cực tiểu (MIN). Do đó, hệ thống đã ngầm chuyển đổi ma trận lợi nhuận thành ma trận chi phí bằng cách: `C_new = M - C_old` (với M là giá trị lớn nhất trong ma trận). Thuật toán giải trên `C_new` để tìm cực tiểu, kết quả cuối cùng tự động được tính ngược lại thành cực đại lợi nhuận cho bạn.")
 
+    # Bài có chi phí cột/hàng giả (metadata.dummy_costs, vd phí lưu kho): tách rõ
+    # phần chi phí ở tuyến giả — vốn bị bảng tổng hợp (chi phí vận chuyển THUẦN) bỏ
+    # qua vì compute_real_cost cắt cột/hàng Dummy. Nhờ đó câu chuyện "kho rẻ" hiện đủ.
+    if lp_result is not None and problem.metadata.get("dummy_costs"):
+        real = objective_value(problem, lp_result)
+        storage = lp_result.total_cost - real  # chênh = chi phí dồn ở tuyến giả
+        if storage > 1e-6:
+            st.info(
+                f"🏬 **Tách chi phí (bài có tuyến giả tính phí):** vận chuyển thuần "
+                f"**{real:,.0f}** + lưu kho/phạt ở tuyến giả **{storage:,.0f}** = tổng "
+                f"**{real + storage:,.0f}**. Bảng tổng hợp bên dưới hiển thị *chi phí vận chuyển thuần*; "
+                f"phần lưu kho quyết định hàng dư nằm ở đâu (xem sơ đồ phân bổ)."
+            )
+
     # Đa nghiệm tối ưu: liệt kê toàn bộ ĐỈNH của diện tối ưu (tính trên nghiệm LP)
     MAX_FACE_VERTS = 40
     routes, verts, face_dim = [], [], 0

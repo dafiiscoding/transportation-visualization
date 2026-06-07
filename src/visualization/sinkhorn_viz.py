@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 from src.models.problem import TransportationProblem
 
 
-def plot_convergence(rows: list[dict], optimum: float) -> plt.Figure:
-    """Chi phí Sinkhorn theo ε (giảm dần) hội tụ về mốc tối ưu LP/MODI."""
+def plot_convergence(
+    rows: list[dict], optimum: float, ylabel: str = "Tổng chi phí vận chuyển",
+) -> plt.Figure:
+    """Giá trị mục tiêu Sinkhorn theo ε (giảm dần) hội tụ về mốc tối ưu LP/MODI."""
     eps = [r["eps"] for r in rows]
     cost = [r["cost"] for r in rows]
 
@@ -15,7 +17,7 @@ def plot_convergence(rows: list[dict], optimum: float) -> plt.Figure:
     ax.set_facecolor("#f8fafc")
 
     ax.plot(eps, cost, "o-", color="#7c3aed", linewidth=2, markersize=7,
-            zorder=3, label="Chi phí Sinkhorn")
+            zorder=3, label="Sinkhorn")
     ax.axhline(optimum, color="#dc2626", linestyle="--", linewidth=2,
                zorder=2, label=f"Tối ưu LP/MODI: {optimum:,.0f}")
 
@@ -26,7 +28,7 @@ def plot_convergence(rows: list[dict], optimum: float) -> plt.Figure:
     ax.set_xscale("log")
     ax.invert_xaxis()  # ε giảm dần từ trái sang phải → tiến tới tối ưu
     ax.set_xlabel("ε (chính quy hoá entropy) — giảm dần →", fontsize=10, color="#475569")
-    ax.set_ylabel("Tổng chi phí vận chuyển", fontsize=10, color="#475569")
+    ax.set_ylabel(ylabel, fontsize=10, color="#475569")
     ax.set_title("ε → 0: Sinkhorn hội tụ về nghiệm tối ưu", fontsize=12,
                  fontweight="bold", color="#1e293b", pad=10)
     ax.legend(framealpha=0.9, fontsize=9)
