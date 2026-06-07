@@ -37,6 +37,34 @@ def test_forbidden_becomes_bigm():
     assert tp.cost[0, 0] == pytest.approx(BIG_M)
 
 
+def test_dummy_costs_applied_to_dummy_column():
+    # supply > demand -> cột Dummy lấy chi phí lưu kho theo từng nguồn
+    p = TransportationProblem("t","min",["A","B"],["D1","D2"],
+                               np.array([100.0,100.0]),np.array([80.0,80.0]),
+                               np.array([[10.0,15.0],[12.0,10.0]]),
+                               metadata={"dummy_costs": [10, 2]})
+    tp = transform_problem(p)
+    assert tp.destinations[-1] == "Dummy"
+    np.testing.assert_array_almost_equal(tp.cost[:, -1], [10.0, 2.0])
+
+
+def test_dummy_costs_default_zero_when_absent():
+    p = TransportationProblem("t","min",["A","B"],["D1","D2"],
+                               np.array([100.0,100.0]),np.array([80.0,80.0]),
+                               np.array([[10.0,15.0],[12.0,10.0]]))
+    tp = transform_problem(p)
+    np.testing.assert_array_almost_equal(tp.cost[:, -1], [0.0, 0.0])
+
+
+def test_dummy_costs_ignored_on_size_mismatch():
+    p = TransportationProblem("t","min",["A","B"],["D1","D2"],
+                               np.array([100.0,100.0]),np.array([80.0,80.0]),
+                               np.array([[10.0,15.0],[12.0,10.0]]),
+                               metadata={"dummy_costs": [10]})  # sai số phần tử
+    tp = transform_problem(p)
+    np.testing.assert_array_almost_equal(tp.cost[:, -1], [0.0, 0.0])
+
+
 def test_max_transforms_to_min():
     cost = np.array([[3.0, 5.0],[4.0, 2.0]])
     p = TransportationProblem("t","max",["A1","A2"],["B1","B2"],

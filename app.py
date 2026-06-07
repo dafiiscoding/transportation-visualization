@@ -23,6 +23,7 @@ from src.ui.sidebar import render_sidebar
 from src.ui.input_panel import render_manual_input, render_problem_table
 from src.ui.result_panel import render_result_overview
 from src.ui.step_panel import render_step_panel
+from src.ui.sinkhorn_panel import render_sinkhorn_panel
 from src.ui.explanation import nw_explanation, lcm_explanation, vogel_explanation, modi_explanation, lp_explanation
 from src.ui.guide import render_guide
 from src.visualization.heatmap import build_transportation_tableau, plot_cost_heatmap, plot_allocation_heatmap
@@ -376,6 +377,10 @@ def main() -> None:
                     show_labels = st.checkbox("Hiển thị nhãn chi phí trên đường nối", value=True)
                     fig_net = plot_network(transformed, best_r, show_labels=show_labels, figsize=(12, 7))
                     st.pyplot(fig_net, use_container_width=True)
+
+            if assignment_result is None:
+                st.markdown("---")
+                render_sinkhorn_panel(transformed, lp_result, modi_results)
 
         with tab3:
             render_step_panel(transformed, initial_results, modi_results, lp_result, assignment_result)

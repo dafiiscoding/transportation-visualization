@@ -4,6 +4,21 @@ from src.models.problem import TransportationProblem
 from src.core.constants import BIG_M
 
 
+def _dummy_lane_costs(dummy_costs, length: int) -> np.ndarray:
+    """Vector chi phí cho tuyến giả (cột/hàng Dummy).
+
+    Lấy từ ``metadata.dummy_costs`` nếu khai báo đúng số phần tử
+    (vd phí lưu kho theo từng nhà máy); nếu thiếu/sai kích thước thì
+    trả về 0 như quy ước dummy cổ điển.
+    """
+    if dummy_costs is None:
+        return np.zeros(length)
+    arr = np.asarray(dummy_costs, dtype=float).ravel()
+    if arr.size != length:
+        return np.zeros(length)
+    return arr
+
+
 def transform_problem(p: TransportationProblem) -> TransportationProblem:
     """Apply all transforms: max→min, forbidden→Big-M, unbalanced→dummy."""
     cost = p.cost.astype(float).copy()
@@ -22,6 +37,7 @@ def transform_problem(p: TransportationProblem) -> TransportationProblem:
     cost[forbidden] = BIG_M
 
     # Unbalanced → dummy
+    dummy_costs = p.metadata.get("dummy_costs") if p.metadata else None
     total_s = supply.sum()
     total_d = demand.sum()
     if not np.isclose(total_s, total_d):
@@ -29,14 +45,14 @@ def transform_problem(p: TransportationProblem) -> TransportationProblem:
             diff = total_s - total_d
             destinations.append("Dummy")
             demand = np.append(demand, diff)
-            new_col = np.zeros((len(sources), 1))
+            new_col = _dummy_lane_costs(dummy_costs, len(sources)).reshape(-1, 1)
             cost = np.hstack([cost, new_col])
             forbidden = np.hstack([forbidden, np.zeros((len(sources), 1), dtype=bool)])
         else:
             diff = total_d - total_s
             sources.append("Dummy")
             supply = np.append(supply, diff)
-            new_row = np.zeros((1, len(destinations)))
+            new_row = _dummy_lane_costs(dummy_costs, len(destinations)).reshape(1, -1)
             cost = np.vstack([cost, new_row])
             forbidden = np.vstack([forbidden, np.zeros((1, len(destinations)), dtype=bool)])
 
