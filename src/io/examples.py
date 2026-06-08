@@ -7,22 +7,14 @@ from src.models.problem import TransportationProblem
 EXAMPLES_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "examples")
 
 EXAMPLE_LABELS = {
-    "00_slide_example": "00. Ví dụ xuyên suốt 3×4 (theo slide)",
-    "01_intro_battle": "01. NW vs VAM: Sức mạnh của xấp xỉ",
-    "02_greedy_trap": "02. LCM: Cái bẫy của sự tham lam",
-    "03_initial_degeneracy": "03. Suy biến: Điểm thắt nút toán học",
-    "04_multiple_optimal": "04. Đa nghiệm: Lựa chọn của nhà quản trị",
-    "05_broken_route": "05. Ràng buộc: Xử lý tuyến đường hỏng",
-    "06_inventory_insight": "06. Cung > Cầu: Chiến lược tồn kho",
-    "07_penalty_insight": "07. Cầu > Cung: Ưu tiên khách hàng",
-    "08_modi_climb": "08. MODI: Hành trình tối ưu hóa",
-    "09_assignment": "09. Phân công: Khi mỗi người một việc",
-    "10_vietnam_logistics": "10. Thực tế: Logistics 3 miền Việt Nam",
-    "11_complex_degeneracy": "11. Suy biến ẩn (Delayed Degeneracy)",
-    "12_hyperplane_multiple_optimals": "12. Đa nghiệm: Mặt phẳng nghiệm (sau leo MODI)",
-    "13_inequality_constraint": "13. Ràng buộc bất đẳng thức (≤ cung, ≥ cầu)",
-    "14_logistics_slide": "14. Logistics 5×12 (đúng số slide, Z*=120 000)",
-    "15_max_profit": "15. Tối đa LỢI NHUẬN (bài toán MAX)",
+    "01_co_ban": "01. Ví dụ cơ bản 3×4 (xuyên suốt)",
+    "02_so_sanh_khoi_tao": "02. So sánh khởi tạo: NW / LCM / Vogel",
+    "03_da_nghiem": "03. Bài toán đa nghiệm",
+    "04_cung_cau_lech": "04. Cung khác cầu (thêm điểm giả)",
+    "05_o_cam": "05. Ô cấm (gán chi phí M)",
+    "06_cuc_dai": "06. Bài toán cực đại (MAX)",
+    "07_phan_viec": "07. Bài toán phân việc",
+    "08_logistics": "08. Logistics 5×12 (Z* = 120 000)",
 }
 
 
