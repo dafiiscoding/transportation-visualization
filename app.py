@@ -376,7 +376,7 @@ def main() -> None:
                     st.caption("Đường nối càng đậm, lượng phân bổ càng lớn.")
                     show_labels = st.checkbox("Hiển thị nhãn chi phí trên đường nối", value=True)
                     fig_net = plot_network(transformed, best_r, show_labels=show_labels, figsize=(12, 7))
-                    st.pyplot(fig_net, use_container_width=True)
+                    st.pyplot(fig_net, width="stretch")
 
             if assignment_result is None:
                 st.markdown("---")

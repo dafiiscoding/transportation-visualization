@@ -110,7 +110,7 @@ def render_step_panel(
         st.info("💡 **Tình huống then chốt:** Nhảy nhanh đến các bước quan trọng để phân tích.")
         cols = st.columns(len(problem.key_highlights))
         for i, highlight in enumerate(problem.key_highlights):
-            if cols[i].button(f"📌 {highlight['label']}", key=f"jump_{i}", use_container_width=True):
+            if cols[i].button(f"📌 {highlight['label']}", key=f"jump_{i}", width="stretch"):
                 _apply_highlight_jump(highlight, journeys, initial_results)
                 st.rerun()
 

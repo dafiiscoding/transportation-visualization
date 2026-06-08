@@ -38,8 +38,8 @@ def render_sidebar() -> dict:
     st.sidebar.divider()
 
     col1, col2 = st.sidebar.columns(2)
-    run = col1.button("▶ Chạy & Giải", type="primary", use_container_width=True)
-    reset = col2.button("🔄 Khởi tạo lại", use_container_width=True)
+    run = col1.button("▶ Chạy & Giải", type="primary", width="stretch")
+    reset = col2.button("🔄 Khởi tạo lại", width="stretch")
 
     return {
         "mode": mode,

@@ -85,7 +85,7 @@ def render_sinkhorn_panel(
 
     # ── 1. Hội tụ mục tiêu theo ε ─────────────────────────────────────────────
     st.markdown(f"##### 1️⃣ ε → 0: {obj_name.lower()} Sinkhorn hội tụ về nghiệm tối ưu")
-    st.pyplot(plot_convergence(rows, optimum, ylabel=obj_name), use_container_width=True)
+    st.pyplot(plot_convergence(rows, optimum, ylabel=obj_name), width="stretch")
 
     table = pd.DataFrame([
         {
@@ -100,7 +100,7 @@ def render_sinkhorn_panel(
         }
         for r in rows
     ])
-    st.dataframe(table, use_container_width=True, hide_index=True)
+    st.dataframe(table, width="stretch", hide_index=True)
     st.caption(
         f"Nghiệm thưa **{sparse_label}** chỉ dùng **{count_support(sparse_plan)}** ô "
         f"(≈ m+n−1). ε càng nhỏ, số ô > 0 của Sinkhorn càng giảm về mức đó."
@@ -116,7 +116,7 @@ def render_sinkhorn_panel(
         blur["allocation"], blur["eps"],
         sharp["allocation"], sharp["eps"],
     )
-    st.pyplot(fig, use_container_width=True)
+    st.pyplot(fig, width="stretch")
     st.info(
         "MODI/LP cho **nghiệm góc** nên thưa, chỉ ~m+n−1 ô khác 0. Entropy phạt sự "
         "tập trung: ε lớn trải hàng ra nhiều ô nên 'mờ', ε nhỏ thì nghiệm sắc lại "
