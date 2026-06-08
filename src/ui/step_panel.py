@@ -325,7 +325,8 @@ def _render_one_step(
             st.pyplot(_f, width="stretch"); plt.close(_f)
     else:
         _f = plot_modi_tableau(problem, step, title="Bảng vận tải", show_exhausted=step.potentials is None)
-        st.pyplot(_f, width="stretch"); plt.close(_f)
+        _, _mid, _ = st.columns([1, 3, 1])      # thu nhỏ + canh giữa cho dễ quan sát
+        _mid.pyplot(_f, width="stretch"); plt.close(_f)
 
     # --- Penalty (chỉ Vogel) ---
     if step.row_penalties is not None and step.col_penalties is not None:
