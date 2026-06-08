@@ -1,5 +1,6 @@
 from __future__ import annotations
 import dataclasses
+import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 from src.models.problem import TransportationProblem
@@ -43,6 +44,39 @@ def _build_journeys(
     return journeys
 
 
+def _render_method_comparison(
+    initial_results: dict[str, AlgorithmResult],
+    modi_results: dict[str, AlgorithmResult],
+    lp_result: AlgorithmResult | None,
+) -> None:
+    """Bảng đối chiếu điểm xuất phát NW/LCM/Vogel: f khởi tạo nhỏ → ít vòng MODI hơn."""
+    if len(initial_results) < 2:
+        return
+    rows = []
+    for method, init in initial_results.items():
+        f0 = float(init.total_cost)
+        if method in modi_results:
+            m = modi_results[method]
+            rounds = sum(1 for s in m.steps if s.cycle)
+            zf = float(m.total_cost)
+        else:
+            rounds, zf = 0, f0
+        rows.append({"Phương pháp": method, "f khởi tạo": f0,
+                     "Số vòng MODI": rounds, "Z* tối ưu": zf})
+    df = pd.DataFrame(rows).sort_values("f khởi tạo", ascending=False)
+    best = df["f khởi tạo"].min()
+    st.markdown("#### 📊 So sánh điểm xuất phát của các phương pháp")
+    st.caption(
+        "Khởi tạo càng gần tối ưu (**f khởi tạo** nhỏ) → MODI càng **ít vòng**. "
+        "Đây chính là lý do Vogel thường được chọn làm mặc định."
+    )
+    sty = df.style.format({"f khởi tạo": "{:,.0f}", "Z* tối ưu": "{:,.0f}"}).apply(
+        lambda row: ['background-color: #d1fae5; font-weight:bold' if row["f khởi tạo"] == best else ''
+                     for _ in row], axis=1)
+    st.dataframe(sty, hide_index=True, width="stretch")
+    st.markdown("---")
+
+
 def render_step_panel(
     problem: TransportationProblem,
     initial_results: dict[str, AlgorithmResult],
@@ -68,6 +102,8 @@ def render_step_panel(
         return
 
     labels = list(journeys.keys())
+
+    _render_method_comparison(initial_results, modi_results, lp_result)
 
     # --- Nút "Tình huống then chốt": nhảy thẳng tới đúng hành trình + đúng bước ---
     if problem.key_highlights:
@@ -198,8 +234,8 @@ def _render_journey(
     if kind == "method" and boundary < seq_len:
         st.caption(f"Bước gốc: {boundary} · Vòng MODI: {seq_len - boundary} · Tổng: {seq_len}")
         st.info(
-            "👀 **Cách đọc mỗi vòng:** xem **thẻ KPI** (chi phí giảm bao nhiêu · ô vào · ô ra · θ) "
-            "và **heatmap phân bổ** bên phải trước; bảng số chỉ để tra chi tiết khi cần."
+            "👀 **Cách đọc mỗi vòng:** nhìn **thẻ KPI** (chi phí giảm · ô vào · ô ra · θ), "
+            "rồi 2 bảng **TRƯỚC → SAU** (bảng trái vẽ chu trình $\\pm\\theta$, bảng phải là kết quả)."
         )
 
     step_num = _step_navigator(seq_len, state_key)
@@ -281,18 +317,15 @@ def _render_one_step(
         bcol, acol = st.columns(2)
         with bcol:
             st.markdown("**Trước — đi theo chu trình $\\pm\\theta$**")
-            st.pyplot(plot_modi_tableau(problem, before_step, title="Trước"), width="stretch")
+            _f = plot_modi_tableau(problem, before_step, title="Trước")
+            st.pyplot(_f, width="stretch"); plt.close(_f)
         with acol:
             st.markdown("**Sau — ô thay đổi tô vàng**")
-            st.pyplot(
-                plot_modi_tableau(problem, after_step, prev_allocation=prev_step.allocation, title="Sau"),
-                width="stretch",
-            )
+            _f = plot_modi_tableau(problem, after_step, prev_allocation=prev_step.allocation, title="Sau")
+            st.pyplot(_f, width="stretch"); plt.close(_f)
     else:
-        st.pyplot(
-            plot_modi_tableau(problem, step, title="Bảng vận tải", show_exhausted=step.potentials is None),
-            width="stretch",
-        )
+        _f = plot_modi_tableau(problem, step, title="Bảng vận tải", show_exhausted=step.potentials is None)
+        st.pyplot(_f, width="stretch"); plt.close(_f)
 
     # --- Penalty (chỉ Vogel) ---
     if step.row_penalties is not None and step.col_penalties is not None:
